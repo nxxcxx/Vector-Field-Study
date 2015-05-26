@@ -133,11 +133,16 @@ uniform vec2 resolution;
 	                                dot(p2,x2), dot(p3,x3) ) );
 	}
 
+float rand( vec2 co ) {
+	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
 float fbm( vec2 p ) {
 
 	float freq = noiseScale;
 	float z = 33.0 + time * 0.25;
-	return snoise( vec3( p * freq, z )  ) * 0.5 + 0.5;
+	// float rnd = (rand( p )*0.5-0.5) * 1e-4;
+	return snoise( vec3( p * freq, z ) );
 
 }
 
@@ -146,10 +151,8 @@ vec2 gradient( vec2 p ) {
 	float e = 1e-1;
 	vec2 dx = vec2( e, 0.0 );
 	vec2 dy = vec2( 0.0, -e ); // y coordinate is flipped?
-	float nz = 33.0;
 
-	// finite difference approximation
-	vec2 res = vec2(
+	vec2 res = vec2(	// finite difference approximation
 		fbm( p + dx ) - fbm( p - dx ),
 		fbm( p + dy ) - fbm( p - dy )
 	);
@@ -158,24 +161,39 @@ vec2 gradient( vec2 p ) {
 
 }
 
+float GradCurlDiv( vec2 p ) {
+
+	float e = 1e-1;
+	float e2 = e*2.0;
+	vec2 dx = vec2( e, 0.0 );
+	vec2 dy = vec2( 0.0, -e );
+
+	float res = gradient( p + dx ).y - gradient( p - dx ).y
+				 - gradient( p + dy ).x + gradient( p - dy ).x;	// curl -> div
+
+	return res / e2;
+
+}
+
 void main()	{
 
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
-	vec3 color = vec3( 0.0 );
+	vec3 field = vec3( 0.0 );
 
-	// noise
-		// float height = snoise( vec3( (uv/*+vec2(time*0.1, time*0.1)*/) * freq , 33.0 )  ) * 0.5 + 0.5;
-		// color = vec3( height );
 
 	// gradient
-		vec2 grad = gradient( uv );
-		// curl
-		grad = vec2( grad.y, -grad.x );
+	vec2 grad = gradient( uv );
 
-		float height = fbm( uv );
-		color = vec3( grad, height );
+	// curl
+	grad = vec2( grad.y, -grad.x );
+
+	// noise
+	float nv = fbm( uv );
+	float height = GradCurlDiv( uv ) * 10.0;
+
+	field = vec3( grad, height );
 
 
-	gl_FragColor = vec4( color, 1.0 );
+	gl_FragColor = vec4( field, nv );
 
 }

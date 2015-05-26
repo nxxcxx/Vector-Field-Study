@@ -28,6 +28,12 @@ function FBOS( renderer, bufferSize ) {
 		wrapT: THREE.ClampToEdgeWrapping,
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
+
+		// wrapS: THREE.MirroredRepeatWrapping,
+		// wrapT: THREE.MirroredRepeatWrapping,
+		// minFilter: THREE.LinearFilter,
+		// magFilter: THREE.LinearFilter,
+
 		format: THREE.RGBAFormat,
 		type: THREE.FloatType,
 		stencilBuffer: false,

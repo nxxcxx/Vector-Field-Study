@@ -112,7 +112,6 @@ function grid( _size, _step ) {
 
 		vertexShader: SHADER_CONTAINER.vectorFieldVert,
 		fragmentShader: SHADER_CONTAINER.vectorFieldFrag,
-		vertexColors: THREE.VertexColors,
 		// transparent: true,
 		// blending: THREE.AdditiveBlending,
 		// depthWrite: false

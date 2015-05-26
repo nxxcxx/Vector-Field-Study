@@ -18,10 +18,10 @@ float divergence( vec2 p ) {
 	vec2 dx = vec2( e, 0.0 );
 	vec2 dy = vec2( 0.0, -e );
 
-	float res = ( texture2D( heightMap, p + dx ).x - texture2D( heightMap, p - dx ).x ) / e2
-		       + ( texture2D( heightMap, p + dy ).y - texture2D( heightMap, p - dy ).y ) / e2;
+	float res = texture2D( heightMap, p + dx ).x - texture2D( heightMap, p - dx ).x
+		       + texture2D( heightMap, p + dy ).y - texture2D( heightMap, p - dy ).y;
 
-	return res;
+	return res / e2;
 
 }
 
@@ -40,12 +40,20 @@ void main()	{
 	if ( here.z > 0.5 ) { // z component use to flag the vertex that will be displaced
 
 		newPosition.xz += normalize( grad.xy ) * 6.0;
-		newPosition.y += grad.z * 10.0;
+		// newPosition.y += grad.z * 10.0;
 
 	}
 
-	// newPosition.y += divergence( here.xy ) * - 2.0;
+	//	the divergence result should be close to zero because curl of a potential field is divergence free.
+	// we are using texture lookup, the potential field is discontinuous at the boundary
+	// and the value will not be zero. consider using forward/backward finite differencs
+
+	// float divg = divergence( here.xy );
+	// if ( abs( divg ) < 1.0 ) divg = 0.0;	// floating point error
+	// newPosition.y += divg * - 1.0;
+
 	newPosition.y += grad.z * 25.0;
+	// newPosition.y += grad.z * 25.0;
 
 
 	gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
