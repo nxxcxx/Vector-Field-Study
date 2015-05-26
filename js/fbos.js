@@ -128,7 +128,8 @@ function FBOS( renderer, bufferSize ) {
 				vertexShader: SHADER_CONTAINER.hudVert,
 				fragmentShader: SHADER_CONTAINER.hudFrag,
 				depthWrite: false,
-				depthTest: false
+				depthTest: false,
+				side: THREE.DoubleSide
 
 			} );
 

@@ -303,7 +303,8 @@ function FBOS( renderer, bufferSize ) {
 				vertexShader: SHADER_CONTAINER.hudVert,
 				fragmentShader: SHADER_CONTAINER.hudFrag,
 				depthWrite: false,
-				depthTest: false
+				depthTest: false,
+				side: THREE.DoubleSide
 
 			} );
 
@@ -340,8 +341,8 @@ function grid( _size, _step ) {
 	for ( r = 0; r < step; r++ ) {
 		for ( c = 0; c < step; c++ ) {
 
-			vertexPositions.push( [ hs - spc * c, 0, hs - spc * r ] );
-			vertexPositions.push( [ hs - spc * c, initialHeight, hs - spc * r ] );
+			vertexPositions.push( [ -hs + spc * c, 0            , -hs + spc * r ] );
+			vertexPositions.push( [ -hs + spc * c, initialHeight, -hs + spc * r ] );
 
 		}
 	}
@@ -356,16 +357,24 @@ function grid( _size, _step ) {
 
 	}
 
-	// store reference position when sampling a texel in a shader
+	/* store reference position when sampling a texel in a shader
+	 *  UV       (1,1)
+	 *	  ┌─────────┐
+	 *	  │       / │
+	 *	  │ f0  /   │
+	 *	  │   /  f1 │
+	 *	  │ /       │
+	 *	  └─────────┘
+	 * (0,0)
+	 */
+
 	var vertexHere = [];
 	var normalizedSpacing = 1.0 / step;
 	for ( r = 0; r < step; r++ ) {
 		for ( c = 0; c < step; c++ ) {
 
-			vertexHere.push(
-					[ 1.0 - normalizedSpacing * c, normalizedSpacing * r, 0 ],
-					[ 1.0 - normalizedSpacing * c, normalizedSpacing * r, 1.0 ] // flag a vertex to displace in a shader
-			);
+			vertexHere.push( [ normalizedSpacing * c, 1.0-normalizedSpacing * r, 0 ] );
+			vertexHere.push( [ normalizedSpacing * c, 1.0-normalizedSpacing * r, 1.0 ] ); // flag a vertex to displace in a shader
 
 		}
 	}
@@ -388,11 +397,8 @@ function grid( _size, _step ) {
 	for ( r = 0; r < step; r++ ) {
 		for ( c = 0; c < step; c++ ) {
 
-			vcolor.push(
-					[ 1.0, 0.0, 0.0 ],
-					[ 0.0, 0.0, 1.0 ]
-			);
-
+			vcolor.push( [ 1.0, 0.0, 0.0 ] );
+			vcolor.push( [ 0.0, 0.0, 1.0 ] );
 		}
 	}
 
@@ -456,7 +462,7 @@ function grid( _size, _step ) {
 function main() {
 
    fbos = new FBOS( renderer, 512 );
-   grid( 500, 50 );
+   grid( 500, 150 );
 
    initGui();
 
@@ -531,6 +537,8 @@ function onWindowResize() {
 
 	renderer.setSize( WIDTH, HEIGHT );
 	renderer.setPixelRatio( pixelRatio );
+
+	fbos.updateHUD();
 
 }
 

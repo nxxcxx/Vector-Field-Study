@@ -133,17 +133,25 @@ uniform vec2 resolution;
 	                                dot(p2,x2), dot(p3,x3) ) );
 	}
 
+float fbm( vec2 p ) {
+
+	float freq = noiseScale;
+	float z = 33.0 + time * 0.25;
+	return snoise( vec3( p * freq, z )  ) * 0.5 + 0.5;
+
+}
+
 vec2 gradient( vec2 p ) {
 
 	float e = 1e-1;
 	vec2 dx = vec2( e, 0.0 );
-	vec2 dy = vec2( 0.0, e );
-	float nz = time*0.1;
+	vec2 dy = vec2( 0.0, -e ); // y coordinate is flipped?
+	float nz = 33.0;
 
 	// finite difference approximation
 	vec2 res = vec2(
-		snoise( vec3( p + dx , nz ) ) - snoise( vec3( p - dx , nz ) ),
-		snoise( vec3( p + dy , nz ) ) - snoise( vec3( p - dy , nz ) )
+		fbm( p + dx ) - fbm( p - dx ),
+		fbm( p + dy ) - fbm( p - dy )
 	);
 
 	return res / ( e * 2.0 );
@@ -153,19 +161,20 @@ vec2 gradient( vec2 p ) {
 void main()	{
 
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
+	vec3 color = vec3( 0.0 );
 
-	// float freq = 600.0;
-	// float height = fsea( uv * freq  /*+ vec2( 0.0, time*500.0 )*/ );
+	// noise
+		// float height = snoise( vec3( (uv/*+vec2(time*0.1, time*0.1)*/) * freq , 33.0 )  ) * 0.5 + 0.5;
+		// color = vec3( height );
 
-	float freq = noiseScale;
-	float height = snoise( vec3( uv * freq , 10.0 )  ) * 0.5 + 0.5;
-	vec3 color = vec3( height );
+	// gradient
+		vec2 grad = gradient( uv );
+		// curl
+		grad = vec2( grad.y, -grad.x );
 
-	// float freq = 3.0;
-	// vec2 height = gradient( uv * freq ) * 0.5 + 0.5;
-	// vec3 color = vec3( height, 1.0 );
+		float height = fbm( uv );
+		color = vec3( grad, height );
 
-	color = vec3( cos( uv.x*10.0 ) );
 
 	gl_FragColor = vec4( color, 1.0 );
 

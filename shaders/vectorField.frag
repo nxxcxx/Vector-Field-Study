@@ -1,6 +1,7 @@
 
 uniform sampler2D heightMap;
 
+varying vec3 vHere;
 varying vec3 vcolor;
 varying float vcolorIntensity; // vcolorIntensity is interpolated value from vertex shader range [0.0, 1.0]
 
@@ -30,13 +31,11 @@ float easeOutQuint( float t ) {
 
 void main() {
 
-
 	vec3 color = vec3( 0.0 );
-	// color = vec3( texture2D( heightMap, vHere.xy ).r );
-
-	// vertex color
-	// color = vcolor;
+	// color = vec3( texture2D( heightMap, vHere.xy ).rgb );
 	color = electricGradient(  sqrt( vcolorIntensity ) );
+
+	color.r = 1.0 - texture2D( heightMap, vHere.xy ).b;
 
 	float alpha = 1.0;
 
