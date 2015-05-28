@@ -17,7 +17,7 @@ void main()	{
 
 	vec2 vel = texture2D( velocityBuffer, texHere ).xy;
 
-	float velScale = 0.03;
+	float velScale = 0.08;
 	pos.x +=  vel.x * velScale;
 	pos.z += -vel.y * velScale;	// y coodinate here is z coordinate in scene so flip it
 

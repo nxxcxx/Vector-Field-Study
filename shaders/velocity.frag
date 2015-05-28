@@ -89,7 +89,7 @@ float rand( vec2 co ) {
 float fbm( vec2 p ) {
 
 	float freq = 10.0;
-	float z = time*0.1;
+	float z = time*0.2;
 	return snoise( vec3( p * freq, z ) );
 
 }
@@ -120,6 +120,8 @@ void main()	{
 
 	vec3 field = vec3( grad.xy, 0.0 );
 
-	gl_FragColor = vec4( field, 1.0 );
+	float noiseValue = fbm( uv );
+
+	gl_FragColor = vec4( field.xyz, noiseValue );
 
 }

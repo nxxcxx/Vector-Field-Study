@@ -518,7 +518,7 @@ function ParticleSystem() {
 			},
 			size: {
 				type: 'f',
-				value: 3.0
+				value: 4.0
 			},
 			particleTexture: {
 				type: 't',
@@ -895,8 +895,8 @@ function run() {
 	renderer.render( scene, camera );
 
 	// hud.setInputTexture( fbor.getFinalTarget() );
-	// hud.setInputTexture( fbor.getPass( 'velocity' ).getOutputTarget() );
-	// hud.render();
+	hud.setInputTexture( fbor.getPass( 'velocity' ).getOutputTarget() );
+	hud.render();
 
 	stats.update();
 

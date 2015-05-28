@@ -5,13 +5,22 @@ varying vec3 vcolor;
 
 void main() {
 
-	vec3 color = vec3( 1.0 );
 
-	vec4 particleColor = texture2D( particleTexture, gl_PointCoord ).rgba;
+	vec4 pColor = texture2D( particleTexture, gl_PointCoord ).rgba;
 
-	color = vec3( 0.2, 0.07, 0.01 ) / particleColor.b;
-	particleColor.rgb = mix( vec3(0.0), color, particleColor.b );
+	vec3 luminanceCoef = vec3( 0.299, 0.587, 0.114 );
+	float luminance = dot( pColor.rgb, luminanceCoef );
 
-	gl_FragColor = particleColor;
+
+	vec3 colA = vec3( 0.0, 0.0, 0.02 );
+	vec3 colB = vec3( 0.25, 0.06, 0.01 );
+
+	pColor.rgb = mix( colA, colB, luminance*3.0 );
+
+	// float gamma = 0.9;
+	// pColor.rgb = pow( pColor.rgb, vec3( 1.0 / gamma ) );
+
+
+	gl_FragColor = pColor.rgba;
 
 }

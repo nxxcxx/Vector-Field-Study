@@ -49,7 +49,7 @@ function ParticleSystem() {
 			},
 			size: {
 				type: 'f',
-				value: 3.0
+				value: 4.0
 			},
 			particleTexture: {
 				type: 't',
