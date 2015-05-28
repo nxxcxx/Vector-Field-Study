@@ -39,21 +39,11 @@ void main()	{
 
 	if ( here.z > 0.5 ) { // z component use to flag the vertex that will be displaced
 
-		newPosition.xz += normalize( grad.xy ) * 6.0;
-		// newPosition.y += grad.z * 10.0;
+		newPosition.xz += clamp( grad.xy * 5.1, -5.1, 5.1 );
 
 	}
 
-	//	the divergence result should be close to zero because curl of a potential field is divergence free.
-	// we are using texture lookup, the potential field is discontinuous at the boundary
-	// and the value will not be zero. consider using forward/backward finite differencs
-
-	// float divg = divergence( here.xy );
-	// if ( abs( divg ) < 1.0 ) divg = 0.0;	// floating point error
-	// newPosition.y += divg * - 1.0;
-
-	newPosition.y += grad.z * 25.0;
-	// newPosition.y += grad.z * 25.0;
+	newPosition.y += grad.z * 50.0;
 
 
 	gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );

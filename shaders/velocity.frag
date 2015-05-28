@@ -1,57 +1,6 @@
-uniform float time;
-uniform float noiseScale;
+
 uniform vec2 resolution;
-
-
-// https://www.shadertoy.com/view/Ms2SD1 "Seascape" by Alexander Alekseev aka TDM - 2014
-	float hash( vec2 p ) {
-		float h = dot(p,vec2(127.1,311.7));
-		return fract(sin(h)*43758.5453123);
-	}
-
-	float noise( in vec2 p ) {
-		vec2 i = floor( p );
-		vec2 f = fract( p );
-		vec2 u = f*f*(3.0-2.0*f);
-		return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ),
-									hash( i + vec2(1.0,0.0) ), u.x),
-									mix( hash( i + vec2(0.0,1.0) ),
-									hash( i + vec2(1.0,1.0) ), u.x), u.y);
-	}
-
-	float sea_octave(vec2 uv, float choppy) {
-		uv += noise(uv);
-		vec2 wv = 1.0-abs(sin(uv));
-		vec2 swv = abs(cos(uv));
-		wv = mix(wv,swv,wv);
-		return pow( abs( 1.0 - pow( abs(wv.x * wv.y),
-			                     0.65 ) ),
-			         choppy);
-	}
-
-	float fsea(vec2 p) {
-
-		float sFre = 0.0125;
-		float sCho = 2.0;
-		float sAmp = 1.0;
-
-		float res = 0.0;
-
-		for (int i=0; i<2; i++) {
-
-			float t = time * 25.0;
-			res += sea_octave( (p+t)*sFre, sCho );
-			res += sea_octave( (p-t)*sFre, sCho );
-			res *= sAmp;
-
-			sFre *= 1.5;
-			sAmp *= 0.3;
-			sCho *= 1.2;
-
-		}
-
-		return res;
-	}
+uniform float time;
 
 	// ashma's webGL noise
 	vec3 mod289(vec3 x) {
@@ -139,8 +88,8 @@ float rand( vec2 co ) {
 
 float fbm( vec2 p ) {
 
-	float freq = noiseScale;
-	float z = 0.0 + time * 0.0;
+	float freq = 10.0;
+	float z = time*0.1;
 	return snoise( vec3( p * freq, z ) );
 
 }
@@ -167,11 +116,10 @@ void main()	{
 	// gradient
 		vec2 grad = gradient( uv );
 	// curl
-		// grad = vec2( grad.y, -grad.x );
+		grad = vec2( grad.y, -grad.x );
 
-	float height = 1.0 - ( fbm( uv ) * 0.5 + 0.5 );
-	vec3 field = vec3( grad.xy, height );
+	vec3 field = vec3( grad.xy, 0.0 );
 
-	gl_FragColor = vec4( field, height );
+	gl_FragColor = vec4( field, 1.0 );
 
 }

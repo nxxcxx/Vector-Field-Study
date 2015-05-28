@@ -1,4 +1,3 @@
-
 var loadingManager = new THREE.LoadingManager();
 loadingManager.onLoad = function () {
 
@@ -9,7 +8,7 @@ loadingManager.onLoad = function () {
 
 loadingManager.onProgress = function ( item, loaded, total ) {
 
-	console.log( loaded+'/'+total, item );
+	console.log( loaded + '/' + total, item );
 
 };
 
@@ -19,13 +18,13 @@ shaderLoader.showStatus = true;
 
 shaderLoader.loadMultiple = function ( SHADER_CONTAINER, urlObj ) {
 
-	Object.keys( urlObj ).forEach( function( key ) {
+	Object.keys( urlObj ).forEach( function ( key ) {
 
 		shaderLoader.load( urlObj[ key ], function ( shader ) {
 
 			SHADER_CONTAINER[ key ] = shader;
 
-		});
+		} );
 
 	} );
 
@@ -44,6 +43,26 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	vectorFieldSimFrag: 'shaders/vectorFieldSim.frag',
 
 	vectorFieldVert: 'shaders/vectorField.vert',
-	vectorFieldFrag: 'shaders/vectorField.frag'
+	vectorFieldFrag: 'shaders/vectorField.frag',
+
+	fborInitial: 'shaders/fborInitialPass.frag',
+	fborSecond: 'shaders/fborSecondPass.frag',
+	fborThird: 'shaders/fborThirdPass.frag',
+	fborFourth: 'shaders/fborFourthPass.frag',
+
+	particleVert: 'shaders/particle.vert',
+	particleFrag: 'shaders/particle.frag',
+
+	velocity: 'shaders/velocity.frag',
+	position: 'shaders/position.frag'
+
+
+} );
+
+var TEXTURES = {};
+var textureLoader = new THREE.TextureLoader( loadingManager );
+textureLoader.load( 'sprites/electric.png', function ( tex ) {
+
+	TEXTURES.electric = tex;
 
 } );

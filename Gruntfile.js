@@ -15,7 +15,7 @@ module.exports = function ( grunt ) {
 		concat: {
 			options: {},
 			main: {
-				src: [ 'js/loaders.js', 'js/scene.js', 'js/gui.js', 'js/fbos.js', 'js/grid.js', 'js/main.js', 'js/run.js', 'js/events.js' ],
+				src: [ 'js/loaders.js', 'js/scene.js', 'js/gui.js', 'js/fbor.js', 'js/particle.js', 'js/fbos.js', 'js/grid.js', 'js/main.js', 'js/run.js', 'js/events.js' ],
 				dest: 'js/build/app.js',
 				nonull: true,
 				options: {
@@ -70,20 +70,34 @@ module.exports = function ( grunt ) {
 					base: '.',
 				}
 			}
+		},
+		preprocess: {
+			options: {
+				context: {
+					DEV: true
+				}
+			},
+			js: {
+				options: {
+					inline: true
+				},
+				src: 'js/build/app.js',
+			}
 		}
 
 	} );
 
 	// Load the plugin that provides the tasks.
-	grunt.loadNpmTasks( 'grunt-browserify' );
+	// grunt.loadNpmTasks( 'grunt-browserify' );
 	grunt.loadNpmTasks( 'grunt-contrib-concat' );
-	grunt.loadNpmTasks( 'grunt-contrib-uglify' );
+	// grunt.loadNpmTasks( 'grunt-contrib-uglify' );
 	grunt.loadNpmTasks( 'grunt-contrib-watch' );
-	grunt.loadNpmTasks( 'grunt-contrib-connect' );
+	// grunt.loadNpmTasks( 'grunt-contrib-connect' );
+	// grunt.loadNpmTasks( 'grunt-preprocess' );
 
 	// tasks
 	grunt.registerTask( 'default', [ 'watch' ] );
 	grunt.registerTask( 'serve', [ 'connect:server', 'watch' ] );
-	grunt.registerTask( 'build', [ 'concat', 'uglify' ] );
+	grunt.registerTask( 'build', [ 'concat', 'preprocess', 'uglify' ] );
 
 };

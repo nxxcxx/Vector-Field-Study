@@ -43,6 +43,7 @@ function onWindowResize() {
 	renderer.setSize( WIDTH, HEIGHT );
 	renderer.setPixelRatio( pixelRatio );
 
-	fbos.updateHUD();
+	// fbos.updateHUD();
+	hud.update();
 
 }

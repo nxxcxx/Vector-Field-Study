@@ -15,9 +15,9 @@ var clock = new THREE.Clock();
 // ---- Settings
 var sceneSettings = {
 
-	bgColor: 0x606060,
+	bgColor: 0x0,
 	enableGridHelper: false,
-	enableAxisHelper: false
+	enableAxisHelper: true
 
 };
 
@@ -26,7 +26,7 @@ var sceneSettings = {
 	scene = new THREE.Scene();
 
 // ---- Camera
-	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 100000 );
+	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 1000000 );
 	// camera orbit control
 	cameraCtrl = new THREE.OrbitControls( camera, container );
 	cameraCtrl.object.position.y = 500;
@@ -36,8 +36,9 @@ var sceneSettings = {
 	renderer = new THREE.WebGLRenderer( { antialias: true , alpha: true } );
 	renderer.setSize( WIDTH, HEIGHT );
 	renderer.setPixelRatio( pixelRatio );
-	renderer.setClearColor( sceneSettings.bgColor, 1 );
+	renderer.setClearColor( sceneSettings.bgColor, 1.0 );
 	renderer.autoClear = false;
+
 	container.appendChild( renderer.domElement );
 
 // ---- Stats

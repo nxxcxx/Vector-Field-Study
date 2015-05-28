@@ -34,11 +34,8 @@ void main() {
 	vec3 color = vec3( 0.0 );
 	// color = vec3( texture2D( heightMap, vHere.xy ).rgb );
 	color = electricGradient(  sqrt( vcolorIntensity ) );
-
 	color.r = 1.0 - texture2D( heightMap, vHere.xy ).b;
 
-	float alpha = 1.0;
-
-	gl_FragColor = vec4( color, alpha );
+	gl_FragColor = vec4( color, 1.0 );
 
 }

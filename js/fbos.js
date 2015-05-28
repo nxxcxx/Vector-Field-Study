@@ -16,7 +16,7 @@ function FBOS( renderer, bufferSize ) {
 	this.tRenderer = renderer;
 	this.tBufferSize = bufferSize;
 
-	var halfBufferSize = bufferSize*0.5;
+	var halfBufferSize = bufferSize * 0.5;
 	this.tCamera = new THREE.OrthographicCamera( -halfBufferSize, halfBufferSize, halfBufferSize, -halfBufferSize, 1, 10 );
 	this.tCamera.position.z = 5;
 
@@ -28,12 +28,6 @@ function FBOS( renderer, bufferSize ) {
 		wrapT: THREE.ClampToEdgeWrapping,
 		minFilter: THREE.NearestFilter,
 		magFilter: THREE.NearestFilter,
-
-		// wrapS: THREE.MirroredRepeatWrapping,
-		// wrapT: THREE.MirroredRepeatWrapping,
-		// minFilter: THREE.LinearFilter,
-		// magFilter: THREE.LinearFilter,
-
 		format: THREE.RGBAFormat,
 		type: THREE.FloatType,
 		stencilBuffer: false,
@@ -58,28 +52,6 @@ function FBOS( renderer, bufferSize ) {
 
 	} );
 
-	// test reading and writing to same texture
-		this.passTarget = this.tTarget.clone();
-		this.passUniforms = {
-
-			resolution: {type: 'v2', value: new THREE.Vector2( bufferSize, bufferSize ) },
-			texture: {type: 't', value: this.tTarget}
-
-		};
-
-		this.passShader = new THREE.ShaderMaterial( {
-
-			uniforms: this.passUniforms,
-			vertexShader: SHADER_CONTAINER.passVert,
-			fragmentShader: SHADER_CONTAINER.passFrag
-
-		} );
-		this.passQuad = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), this.passShader );
-		this.passScene = new THREE.Scene();
-		this.passScene.add( this.passQuad );
-	//
-
-
 	this.tQuad = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), this.tShader );
 
 	this.tScene.add( this.tQuad );
@@ -87,8 +59,6 @@ function FBOS( renderer, bufferSize ) {
 	this.simulate = function () {
 
 		this.tRenderer.render( this.tScene, this.tCamera, this.tTarget );
-
-		// this.tRenderer.render( this.passScene, this.tCamera, this.tTarget );
 
 	};
 
