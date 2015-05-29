@@ -45,11 +45,6 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	vectorFieldVert: 'shaders/vectorField.vert',
 	vectorFieldFrag: 'shaders/vectorField.frag',
 
-	fborInitial: 'shaders/fborInitialPass.frag',
-	fborSecond: 'shaders/fborSecondPass.frag',
-	fborThird: 'shaders/fborThirdPass.frag',
-	fborFourth: 'shaders/fborFourthPass.frag',
-
 	particleVert: 'shaders/particle.vert',
 	particleFrag: 'shaders/particle.frag',
 

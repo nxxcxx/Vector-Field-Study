@@ -3,6 +3,7 @@ uniform sampler2D particleTexture;
 
 varying vec3 vcolor;
 
+
 void main() {
 
 
@@ -16,10 +17,6 @@ void main() {
 	vec3 colB = vec3( 0.25, 0.06, 0.01 );
 
 	pColor.rgb = mix( colA, colB, luminance*3.0 );
-
-	// float gamma = 0.9;
-	// pColor.rgb = pow( pColor.rgb, vec3( 1.0 / gamma ) );
-
 
 	gl_FragColor = pColor.rgba;
 

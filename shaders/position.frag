@@ -17,19 +17,27 @@ void main()	{
 
 	vec2 vel = texture2D( velocityBuffer, texHere ).xy;
 
-	float velScale = 0.08;
+	float height = texture2D( velocityBuffer, texHere ).w;
+
+	float velScale = 0.07;
 	pos.x +=  vel.x * velScale;
 	pos.z += -vel.y * velScale;	// y coodinate here is z coordinate in scene so flip it
 
+	pos.y = height * 10.0;
 
 	float halfDimension = resolution.x * 0.5;
-	if ( pos.x > halfDimension || pos.x < -halfDimension ||  pos.z > halfDimension || pos.z < -halfDimension) {
+	// if ( pos.x > halfDimension || pos.x < -halfDimension ||  pos.z > halfDimension || pos.z < -halfDimension) {
+	// 	// respawn at random location
+	// 	pos.x = rand( vel.xy + texHere ) * 512.0 - ( 512.0 * 0.5 );
+	// 	pos.z = rand( vel.yx + texHere ) * 512.0 - ( 512.0 * 0.5 );
+	// }
+
+	if ( length( pos.xz ) > halfDimension - 10.0 ) {
 		// respawn at random location
 		pos.x = rand( vel.xy + texHere ) * 512.0 - ( 512.0 * 0.5 );
 		pos.z = rand( vel.yx + texHere ) * 512.0 - ( 512.0 * 0.5 );
+		pos.xz = normalize( pos.xz ) * rand( vel.yy + texHere ) * (halfDimension - 10.0);
 	}
-
-
 
 	gl_FragColor = vec4( pos, 1.0 );
 
