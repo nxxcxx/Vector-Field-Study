@@ -49,6 +49,7 @@ FBOCompositor.prototype = {
 
 		for ( var i = 0; i < this.passes.length; i++ ) {
 
+			this.updatePassDependencies();
 			var currPass = this.passes[ i ];
 			this.renderPass( currPass.getShader(), currPass.getRenderTarget() );
 			currPass.swapBuffer();
@@ -88,17 +89,26 @@ FBOCompositor.prototype = {
 
 	addPass: function ( name, fragmentSahader, inputTargets ) {
 
-		var self = this;
 		var pass = new FBOPass( name, this.vertexPass, fragmentSahader, this.bufferSize );
-
-		Object.keys( inputTargets || {} ).forEach( function ( shaderInputName ) {
-
-			pass.setInputTarget( shaderInputName, self.getTarget( inputTargets[ shaderInputName ] ) );
-
-		} );
-
+		pass.inputTargetList = inputTargets;
 		this.passes.push( pass );
 		return pass;
+
+	},
+
+	updatePassDependencies: function () {
+
+		var self = this;
+		for ( var i = 0; i < this.passes.length; i++ ) {
+
+			var currPass = this.passes[ i ];
+			Object.keys( currPass.inputTargetList || {} ).forEach( function ( shaderInputName ) {
+
+				currPass.setInputTarget( shaderInputName, self.getTarget( currPass.inputTargetList[ shaderInputName ] ) );
+
+			} );
+
+		}
 
 	},
 
@@ -114,6 +124,7 @@ FBOCompositor.prototype = {
 		var pass = this.getPass( toPass );
 		this.passThruShader.uniforms.passTexture.value = dataTexture;
 		this.renderPass( this.passThruShader, pass.doubleBuffer[ 1 ] ); // render to secondary buffer which is already set as input to first buffer.
+		this.renderPass( this.passThruShader, pass.doubleBuffer[ 0 ] );
 		/*!
 		 *	dont call renderer.clear() before updating the simulation it will clear current active buffer which is the render target that we previously rendered to.
 		 *	or just set active target to dummy target.
@@ -137,6 +148,8 @@ function FBOPass( name, vertexShader, fragmentSahader, bufferSize ) {
 	this.doubleBuffer = []; //  single FBO cannot act as input (texture) and output (render target) at the same time, we take the double-buffer approach
 	this.doubleBuffer[ 0 ] = this.generateRenderTarget();
 	this.doubleBuffer[ 1 ] = this.generateRenderTarget();
+
+	this.inputTargetList = {};
 
 	this.uniforms = {
 

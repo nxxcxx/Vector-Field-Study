@@ -1,6 +1,7 @@
 
 uniform vec2 resolution;
 uniform float time;
+uniform sampler2D positionBuffer;
 
 	// ashma's webGL noise https://github.com/ashima/webgl-noise
 	vec3 mod289(vec3 x) {
@@ -137,60 +138,78 @@ float rand( vec2 co ) {
 	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-float fbm( vec2 p ) {
+float fbm( vec3 p ) {
 
-	float freq = 10.0;
-	float z = time * 0.2;
-	return snoise( vec3( p * freq, z ) );
+	float freq = 5.0;
+	return snoise( p * freq );
 
 }
 
-vec2 gradient( vec2 p ) {
+vec3 gradient( vec3 p ) {
 
 	float e = 1e-4;
-	vec2 dx = vec2( e, 0.0 );
-	vec2 dy = vec2( 0.0, e );
+	vec3 dx = vec3( e, 0.0, 0.0 );
+	vec3 dy = vec3( 0.0, e, 0.0 );
+	vec3 dz = vec3( 0.0, 0.0, e );
 
-	vec2 res = vec2(
+	vec3 res = vec3(
 		fbm( p + dx ) - fbm( p - dx ),
-		fbm( p + dy ) - fbm( p - dy )
+		fbm( p + dy ) - fbm( p - dy ),
+		fbm( p + dz ) - fbm( p - dz )
 	);
 
 	return res / ( e * 2.0 );
 
 }
 
-vec2 gradientFsea( vec2 p ) {
+vec3 potential( vec3 p ) {
+
+	vec3 res = vec3(
+		fbm( p + 00.0 ),
+		fbm( p + 10.0 ),
+		fbm( p + 20.0 )
+	);
+	return res;
+}
+
+vec3 curl( vec3 p ) {
 
 	float e = 1e-4;
-	vec2 dx = vec2( e, 0.0 );
-	vec2 dy = vec2( 0.0, e );
+	vec3 dx = vec3( e, 0.0, 0.0 );
+	vec3 dy = vec3( 0.0, e, 0.0 );
+	vec3 dz = vec3( 0.0, 0.0, e );
 
-	vec2 res = vec2(
-		fsea( p + dx ) - fsea( p - dx ),
-		fsea( p + dy ) - fsea( p - dy )
+	vec3 res = vec3(
+
+		  potential( p + dy ).z - potential( p - dy ).z
+		- potential( p + dz ).y + potential( p - dz ).y,
+
+		  potential( p + dz ).x - potential( p - dz ).x
+		- potential( p + dx ).z + potential( p - dx ).z,
+
+		  potential( p + dx ).y - potential( p - dx ).y
+		- potential( p + dy ).x + potential( p - dy ).x
+
 	);
 
 	return res / ( e * 2.0 );
 
 }
+
 
 void main()	{
 
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
 
-	vec2 grad = gradient( uv );
+	vec3 pos = texture2D( positionBuffer, uv ).xyz;
 
-	#define CURL
-	#ifdef CURL
-		grad = vec2( grad.y, -grad.x );
-	#endif
+	pos /= resolution.xxx; // need to map position range to [0, 1] dont use normalize() it normalize the length thats not what we want
+	// pos is an input to noise function
 
-	// float height = fbm( uv );
-	float height = fbm( uv );
 
-	vec3 field = vec3( grad.xy, height );
+	vec3 field = curl( pos ) * 0.05;
 
-	gl_FragColor = vec4( field.xyz, height );
+
+	gl_FragColor = vec4( field.xyz, 0.0 );
 
 }

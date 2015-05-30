@@ -16,7 +16,7 @@ void main() {
 	vec3 colA = vec3( 0.0, 0.0, 0.02 );
 	vec3 colB = vec3( 0.25, 0.06, 0.01 );
 
-	pColor.rgb = mix( colA, colB, luminance*3.0 );
+	pColor.rgb = mix( colA, colB, luminance*3.0 ); // luminance * 3.0
 
 	gl_FragColor = pColor.rgba;
 

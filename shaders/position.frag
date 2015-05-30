@@ -11,31 +11,25 @@ void main()	{
 
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
 
-	float dimension = 512.0;
-
 	vec3 pos = texture2D( mirrorBuffer, uv ).xyz;
 
-	// texel is normalized position range [0, 1]. use to sample velocity texture
-	vec2 texel = (pos.xy / ( dimension * 0.5 )) * 0.5 + 0.5;
+	vec3 vel = texture2D( velocityBuffer, uv ).xyz;
 
-	vec2 vel = texture2D( velocityBuffer, texel ).xy;
+	pos.xyz += vel.xyz;
 
 
-	float velScale = 0.07;
-	pos.xy += vel.xy * velScale;
+	// respawn at random location within spawnSize
+	vec3 killRange = vec3( 512.0 ) * 0.5;
+	float spawnRange = 25.0;
+	if (
+		any( greaterThan( pos,  killRange ) ) ||
+		any(    lessThan( pos, -killRange ) )
+	) {
 
-	// #define HEIGHT_DISPLACE
-	#ifdef HEIGHT_DISPLACE
-		float height = texture2D( velocityBuffer, texel ).w;
-		pos.z = height * 15.0;
-	#endif
+		pos.x = rand( uv + 111.0 ) * spawnRange - ( spawnRange * 0.5 );
+		pos.y = rand( uv + 222.0 ) * spawnRange - ( spawnRange * 0.5 );
+		pos.z = rand( uv + 333.0 ) * spawnRange - ( spawnRange * 0.5 );
 
-	// respawn at random location
-	float halfDimension = resolution.x * 0.5;
-	if ( pos.x > halfDimension || pos.x < -halfDimension ||  pos.y > halfDimension || pos.y < -halfDimension) {
-
-		pos.x = rand( vel.xy + texel ) * dimension - ( dimension * 0.5 );
-		pos.y = rand( vel.yx + texel ) * dimension - ( dimension * 0.5 );
 	}
 
 	gl_FragColor = vec4( pos, 1.0 );

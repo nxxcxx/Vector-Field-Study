@@ -1,6 +1,6 @@
-function ParticleSystem() {
+function ParticleSystem( _size ) {
 
-	this.size = 512;
+	this.size = _size;
 	this.halfSize = this.size * 0.5;
 
 	this.geom = new THREE.BufferGeometry();
@@ -45,7 +45,7 @@ function ParticleSystem() {
 		uniforms: {
 			size: {
 				type: 'f',
-				value: 4.0
+				value: 2.0
 			},
 			particleTexture: {
 				type: 't',
@@ -87,12 +87,20 @@ ParticleSystem.prototype.generatePositionTexture = function () {
 
 	var data = new Float32Array( this.size * this.size * 4 );
 
+	var fieldSize = 25.0;
+
 	for ( var i = 0; i < data.length; i += 4 ) {
 
 		// position x, y, z, w
-		data[ i + 0 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
-		data[ i + 1 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
-		data[ i + 2 ] = 0.0;
+
+		// data[ i + 0 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
+		// data[ i + 1 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
+		// data[ i + 2 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
+		// data[ i + 3 ] = 0.0;
+
+		data[ i + 0 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
+		data[ i + 1 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
+		data[ i + 2 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
 		data[ i + 3 ] = 0.0;
 
 	}
