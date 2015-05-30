@@ -11,32 +11,31 @@ void main()	{
 
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
 
+	float dimension = 512.0;
+
 	vec3 pos = texture2D( mirrorBuffer, uv ).xyz;
 
-	vec2 texHere = (pos.xz / ( 512.0 * 0.5 )) * 0.5 + 0.5;
+	// texel is normalized position range [0, 1]. use to sample velocity texture
+	vec2 texel = (pos.xy / ( dimension * 0.5 )) * 0.5 + 0.5;
 
-	vec2 vel = texture2D( velocityBuffer, texHere ).xy;
+	vec2 vel = texture2D( velocityBuffer, texel ).xy;
 
-	float height = texture2D( velocityBuffer, texHere ).w;
 
 	float velScale = 0.07;
-	pos.x +=  vel.x * velScale;
-	pos.z += -vel.y * velScale;	// y coodinate here is z coordinate in scene so flip it
+	pos.xy += vel.xy * velScale;
 
-	pos.y = height * 10.0;
+	// #define HEIGHT_DISPLACE
+	#ifdef HEIGHT_DISPLACE
+		float height = texture2D( velocityBuffer, texel ).w;
+		pos.z = height * 15.0;
+	#endif
 
+	// respawn at random location
 	float halfDimension = resolution.x * 0.5;
-	// if ( pos.x > halfDimension || pos.x < -halfDimension ||  pos.z > halfDimension || pos.z < -halfDimension) {
-	// 	// respawn at random location
-	// 	pos.x = rand( vel.xy + texHere ) * 512.0 - ( 512.0 * 0.5 );
-	// 	pos.z = rand( vel.yx + texHere ) * 512.0 - ( 512.0 * 0.5 );
-	// }
+	if ( pos.x > halfDimension || pos.x < -halfDimension ||  pos.y > halfDimension || pos.y < -halfDimension) {
 
-	if ( length( pos.xz ) > halfDimension - 10.0 ) {
-		// respawn at random location
-		pos.x = rand( vel.xy + texHere ) * 512.0 - ( 512.0 * 0.5 );
-		pos.z = rand( vel.yx + texHere ) * 512.0 - ( 512.0 * 0.5 );
-		pos.xz = normalize( pos.xz ) * rand( vel.yy + texHere ) * (halfDimension - 10.0);
+		pos.x = rand( vel.xy + texel ) * dimension - ( dimension * 0.5 );
+		pos.y = rand( vel.yx + texel ) * dimension - ( dimension * 0.5 );
 	}
 
 	gl_FragColor = vec4( pos, 1.0 );

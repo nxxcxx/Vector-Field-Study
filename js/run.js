@@ -2,16 +2,20 @@
 
 function update() {
 
-	// fbos.tUniforms.time.value = clock.getElapsedTime();
-	// fbos.simulate();
-	// gridShader.uniforms.heightMap.value = fbos.getOutput();
+	//@ifdef VECTOR_FIELD
+		fbos.tUniforms.time.value = clock.getElapsedTime();
+		fbos.simulate();
+		gridShader.uniforms.heightMap.value = fbos.getOutput();
+	//@endif
 
-	fbor.getPass( 'velocity' ).uniforms.time.value = clock.getElapsedTime();
+	//@ifdef PARTICLE_FIELD
+		fbor.getPass( 'velocity' ).uniforms.time.value = clock.getElapsedTime();
 
-	fbor.tick();
+		fbor.tick();
 
-	psys.setPositionBuffer( fbor.getFinalTarget() );
-	psys.material.uniforms.velocityBuffer.value = fbor.getPass( 'velocity' ).getOutputTarget();
+		psys.setPositionBuffer( fbor.getFinalTarget() );
+		psys.material.uniforms.velocityBuffer.value = fbor.getPass( 'velocity' ).getRenderTarget();
+	//@endif
 
 }
 
@@ -22,14 +26,17 @@ function run() {
 	requestAnimationFrame( run );
 	renderer.clear();
 	update();
-	// renderer.render( scene, camera );
-	// fbos.renderHUD();
-
 	renderer.render( scene, camera );
 
-	// hud.setInputTexture( fbor.getFinalTarget() );
-	hud.setInputTexture( fbor.getPass( 'velocity' ).getOutputTarget() );
-	hud.render();
+	//@ifdef VECTOR_FIELD
+		fbos.renderHUD();
+	//@endif
+
+	//@ifdef PARTICLE_FIELD
+		// hud.setInputTexture( fbor.getFinalTarget() );
+		hud.setInputTexture( fbor.getPass( 'velocity' ).getRenderTarget() );
+		hud.render();
+	//@endif
 
 	stats.update();
 

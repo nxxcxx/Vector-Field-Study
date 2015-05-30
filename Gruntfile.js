@@ -15,7 +15,7 @@ module.exports = function ( grunt ) {
 		concat: {
 			options: {},
 			main: {
-				src: [ 'js/loaders.js', 'js/scene.js', 'js/gui.js', 'js/fbor.js', 'js/particle.js', 'js/fbos.js', 'js/grid.js', 'js/main.js', 'js/run.js', 'js/events.js' ],
+				src: [ 'js/loaders.js', 'js/scene.js', 'js/gui.js', 'js/FBOCompositor.js', 'js/hud.js', 'js/particle.js', 'js/fbos.js', 'js/grid.js', 'js/main.js', 'js/run.js', 'js/events.js' ],
 				dest: 'js/build/app.js',
 				nonull: true,
 				options: {
@@ -53,14 +53,14 @@ module.exports = function ( grunt ) {
 			},
 			grunt: {
 				files: [ 'Gruntfile.js' ],
-				tasks: [ 'concat:main' ]
+				tasks: [ 'concat:main', 'preprocess' ]
 			},
 			def: {
 				files: [ '*.html', 'shaders/*' ]
 			},
 			js: {
 				files: [ 'js/*.js' ],
-				tasks: [ 'concat:main' ]
+				tasks: [ 'concat:main', 'preprocess' ]
 			}
 		},
 		connect: {
@@ -74,7 +74,8 @@ module.exports = function ( grunt ) {
 		preprocess: {
 			options: {
 				context: {
-					DEV: true
+					// VECTOR_FIELD: true
+					PARTICLE_FIELD: true
 				}
 			},
 			js: {
@@ -88,12 +89,12 @@ module.exports = function ( grunt ) {
 	} );
 
 	// Load the plugin that provides the tasks.
-	// grunt.loadNpmTasks( 'grunt-browserify' );
+	grunt.loadNpmTasks( 'grunt-browserify' );
 	grunt.loadNpmTasks( 'grunt-contrib-concat' );
-	// grunt.loadNpmTasks( 'grunt-contrib-uglify' );
+	grunt.loadNpmTasks( 'grunt-contrib-uglify' );
 	grunt.loadNpmTasks( 'grunt-contrib-watch' );
-	// grunt.loadNpmTasks( 'grunt-contrib-connect' );
-	// grunt.loadNpmTasks( 'grunt-preprocess' );
+	grunt.loadNpmTasks( 'grunt-contrib-connect' );
+	grunt.loadNpmTasks( 'grunt-preprocess' );
 
 	// tasks
 	grunt.registerTask( 'default', [ 'watch' ] );

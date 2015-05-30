@@ -1,7 +1,7 @@
 
 uniform sampler2D particleTexture;
 
-varying vec3 vcolor;
+varying vec3 vColor;
 
 
 void main() {

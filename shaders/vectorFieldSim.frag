@@ -53,7 +53,7 @@ uniform vec2 resolution;
 		return res;
 	}
 
-	// ashma's webGL noise
+	// ashma's webGL noise https://github.com/ashima/webgl-noise
 	vec3 mod289(vec3 x) {
 	  return x - floor(x * (1.0 / 289.0)) * 289.0;
 	}
@@ -149,7 +149,7 @@ vec2 gradient( vec2 p ) {
 
 	float e = 1e-2;
 	vec2 dx = vec2( e, 0.0 );
-	vec2 dy = vec2( 0.0, -e ); // y coordinate is flipped?
+	vec2 dy = vec2( 0.0, e );
 
 	vec2 res = vec2(
 		fbm( p + dx ) - fbm( p - dx ),
@@ -165,9 +165,12 @@ void main()	{
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
 
 	// gradient
-		vec2 grad = gradient( uv );
-	// curl
-		// grad = vec2( grad.y, -grad.x );
+	vec2 grad = gradient( uv );
+
+	#define CURL
+	#ifdef CURL
+		grad = vec2( grad.y, -grad.x );
+	#endif
 
 	float height = 1.0 - ( fbm( uv ) * 0.5 + 0.5 );
 	vec3 field = vec3( grad.xy, height );

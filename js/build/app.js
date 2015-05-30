@@ -81,7 +81,7 @@ var clock = new THREE.Clock();
 // ---- Settings
 var sceneSettings = {
 
-	bgColor: 0x0,
+	bgColor: 0x202020,
 	enableGridHelper: false,
 	enableAxisHelper: true
 
@@ -95,7 +95,7 @@ var sceneSettings = {
 	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 1000000 );
 	// camera orbit control
 	cameraCtrl = new THREE.OrbitControls( camera, container );
-	cameraCtrl.object.position.y = 500;
+	cameraCtrl.object.position.z = 500;
 	cameraCtrl.update();
 
 // ---- Renderer
@@ -161,7 +161,6 @@ function initGui() {
 	gui_settings = gui.addFolder( 'Settings' );
 		gui_settings.addColor( sceneSettings, 'bgColor' ).name( 'Background' );
 		gui_settings.add( camera, 'fov', 25, 120, 1 ).name( 'FOV' );
-		gui_settings.add( fbos.tUniforms.noiseScale, 'value', 0.0, 10.0, 0.1 ).name( 'Noise Scale' );
 
 	gui_display.open();
 	gui_settings.open();
@@ -187,8 +186,8 @@ function updateGuiDisplay() {
 
 }
 
-// Source: js/fbor.js
-function FBOR( renderer, bufferSize, vertexPass ) {
+// Source: js/FBOCompositor.js
+function FBOCompositor( renderer, bufferSize, vertexPass ) {
 
 	var gl = renderer.getContext();
 	if ( !gl.getExtension( "OES_texture_float" ) ) {
@@ -208,8 +207,9 @@ function FBOR( renderer, bufferSize, vertexPass ) {
 	this.quad = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), null );
 	this.scene = new THREE.Scene();
 	this.scene.add( this.quad );
+	this.dummyRenderTarget = new THREE.WebGLRenderTarget( 2, 2 );
 
-	this.passShader = new THREE.ShaderMaterial( {
+	this.passThruShader = new THREE.ShaderMaterial( {
 
 		uniforms: {
 			resolution: {
@@ -230,17 +230,16 @@ function FBOR( renderer, bufferSize, vertexPass ) {
 
 }
 
-// end of FBOR
+// end of FBOCompositor
 
-FBOR.prototype = {
+FBOCompositor.prototype = {
 
 	tick: function () {
 
 		for ( var i = 0; i < this.passes.length; i++ ) {
 
 			var currPass = this.passes[ i ];
-			this.quad.material = currPass.getShader();
-			this.renderer.render( this.scene, this.camera, currPass.getOutputTarget() );
+			this.renderPass( currPass.getShader(), currPass.getRenderTarget() );
 			currPass.swapBuffer();
 
 		}
@@ -250,13 +249,13 @@ FBOR.prototype = {
 	getFinalTarget: function () {
 
 		var finalPass = this.passes[ this.passes.length - 1 ];
-		return finalPass.getOutputTarget();
+		return finalPass.getRenderTarget();
 
 	},
 
 	getTarget: function ( name ) {
 
-		return this.getPass( name ).getOutputTarget();
+		return this.getPass( name ).getRenderTarget();
 
 	},
 
@@ -292,20 +291,28 @@ FBOR.prototype = {
 
 	},
 
-	renderTexture: function ( inputTexture, outPass ) {
+	renderPass: function ( shader, passTarget ) {
 
-		var pass = this.getPass( outPass );
-		this.passShader.uniforms.passTexture.value = inputTexture;
-		this.quad.material = this.passShader;
-		this.renderer.render( this.scene, this.camera, pass.target2 );
-		this.renderer.render( this.scene, this.camera, pass.target );
+		this.quad.material = shader;
+		this.renderer.render( this.scene, this.camera, passTarget, true );
 
+	},
+
+	renderInitialBuffer: function ( dataTexture, toPass ) {
+
+		var pass = this.getPass( toPass );
+		this.passThruShader.uniforms.passTexture.value = dataTexture;
+		this.renderPass( this.passThruShader, pass.doubleBuffer[ 1 ], true ); // render to secondary buffer which is already set as input to first buffer.
+		/*!
+		 *	dont call renderer.clear() before updating the simulation it will clear current active buffer which is the render target that we previously rendered to.
+		 *	or just set active target to dummy target.
+		 */
+		this.renderer.setRenderTarget( this.dummyRenderTarget );
 
 	}
 
 
 };
-
 
 
 function FBOPass( name, vertexShader, fragmentSahader, bufferSize ) {
@@ -314,25 +321,11 @@ function FBOPass( name, vertexShader, fragmentSahader, bufferSize ) {
 	this.vertexShader = vertexShader;
 	this.fragmentSahader = fragmentSahader;
 	this.bufferSize = bufferSize;
-	this.currentTarget = 1;
 
-	this.target = new THREE.WebGLRenderTarget( this.bufferSize, this.bufferSize, {
-
-		wrapS: THREE.ClampToEdgeWrapping,
-		wrapT: THREE.ClampToEdgeWrapping,
-		minFilter: THREE.NearestFilter,
-		magFilter: THREE.NearestFilter,
-		format: THREE.RGBAFormat,
-		type: THREE.FloatType,
-		stencilBuffer: false,
-		depthBuffer: false,
-
-	} );
-
-	this.target2 = this.target.clone();
-
-	this.target.id = 1;
-	this.target2.id = 2;
+	this.currentBuffer = 0;
+	this.doubleBuffer = []; //  single FBO cannot act as input (texture) and output (render target) at the same time, we take the double-buffer approach
+	this.doubleBuffer[ 0 ] = this.generateRenderTarget();
+	this.doubleBuffer[ 1 ] = this.generateRenderTarget();
 
 	this.uniforms = {
 
@@ -346,7 +339,7 @@ function FBOPass( name, vertexShader, fragmentSahader, bufferSize ) {
 		},
 		mirrorBuffer: {
 			type: 't',
-			value: this.target2
+			value: this.doubleBuffer[ 1 ]
 		}
 
 	};
@@ -366,8 +359,8 @@ FBOPass.prototype = {
 	getShader: function () {
 		return this.shader;
 	},
-	getOutputTarget: function () {
-		return ( this.currentTarget === 1 ) ? this.target : this.target2;
+	getRenderTarget: function () {
+		return this.doubleBuffer[ this.currentBuffer ];
 	},
 	setInputTarget: function ( shaderInputName, inputTarget ) {
 		this.uniforms[ shaderInputName ] = {
@@ -377,18 +370,32 @@ FBOPass.prototype = {
 	},
 	swapBuffer: function () {
 
-		this.uniforms.mirrorBuffer.value = ( this.currentTarget === 1 ) ? this.target : this.target2;
-		this.currentTarget *= -1;
+		this.uniforms.mirrorBuffer.value = this.doubleBuffer[ this.currentBuffer ];
+		this.currentBuffer ^= 1; // toggle between 0 and 1
 
 	},
-	debugBuffer: function () {
-		console.log( this.currentTarget );
-		console.log( this.uniforms.mirrorBuffer.value.id );
-		console.log( this.getOutputTarget().id );
+	generateRenderTarget: function () {
+
+		var target = new THREE.WebGLRenderTarget( this.bufferSize, this.bufferSize, {
+
+			wrapS: THREE.ClampToEdgeWrapping,
+			wrapT: THREE.ClampToEdgeWrapping,
+			minFilter: THREE.NearestFilter,
+			magFilter: THREE.NearestFilter,
+			format: THREE.RGBAFormat,
+			type: THREE.FloatType,
+			stencilBuffer: false,
+			depthBuffer: false,
+
+		} );
+
+		return target;
+
 	}
 
 };
 
+// Source: js/hud.js
 
 function HUD( renderer ) {
 
@@ -496,7 +503,7 @@ function ParticleSystem() {
 	this.geom.addAttribute( 'position', new THREE.BufferAttribute( this.position, 3 ) );
 	this.geom.computeBoundingSphere();
 
-	// this.material = new THREE.PointCloudMaterial( { size: 1 } );
+
 	this.material = new THREE.ShaderMaterial( {
 
 		attributes: {
@@ -507,10 +514,6 @@ function ParticleSystem() {
 		},
 
 		uniforms: {
-			dimension: {
-				type: 'f',
-				value: this.size
-			},
 			size: {
 				type: 'f',
 				value: 4.0
@@ -553,21 +556,22 @@ ParticleSystem.prototype.setPositionBuffer = function ( inputBuffer ) {
 
 ParticleSystem.prototype.generatePositionTexture = function () {
 
-	var data = new Float32Array( this.size * this.size * 3 );
+	var data = new Float32Array( this.size * this.size * 4 );
 
-	for ( var i = 0; i < data.length; i += 3 ) {
+	for ( var i = 0; i < data.length; i += 4 ) {
 
+		// position x, y, z, w
 		data[ i + 0 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
-		data[ i + 1 ] = 0;
-		data[ i + 2 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
+		data[ i + 1 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
+		data[ i + 2 ] = 0.0;
+		data[ i + 3 ] = 0.0;
 
 	}
 
-	var texture = new THREE.DataTexture( data, this.size, this.size, THREE.RGBFormat, THREE.FloatType );
+	var texture = new THREE.DataTexture( data, this.size, this.size, THREE.RGBAFormat, THREE.FloatType );
 	texture.minFilter = THREE.NearestFilter;
 	texture.magFilter = THREE.NearestFilter;
 	texture.needsUpdate = true;
-	texture.flipY = false;
 
 	return texture;
 
@@ -703,23 +707,25 @@ function FBOS( renderer, bufferSize ) {
 } // end of class
 
 // Source: js/grid.js
-function grid( _size, _step ) {
+/* exported grid */
+
+function grid( _size, _segment ) {
 
 	gridGeom = new THREE.BufferGeometry();
 	var size = _size;
-	var step = _step;
+	var segment = _segment;
 	var initialHeight = 0;
-	var hs = size / 2;
-	var spc = size / ( step - 1 );
+	var hs = size * 0.5;
+	var spc = size / segment;
 
 	var i, r, c;
 	// arrange vertices like a grid
 	var vertexPositions = [];
-	for ( r = 0; r < step; r++ ) {
-		for ( c = 0; c < step; c++ ) {
+	for ( r = 0; r <= segment; r++ ) {
+		for ( c = 0; c <= segment; c++ ) {
 
-			vertexPositions.push( [ -hs + spc * c, 0            , -hs + spc * r ] );
-			vertexPositions.push( [ -hs + spc * c, initialHeight, -hs + spc * r ] );
+			vertexPositions.push( [ -hs + spc * c, -hs + spc * r, 0 ] );
+			vertexPositions.push( [ -hs + spc * c, -hs + spc * r, initialHeight ] );
 
 		}
 	}
@@ -746,12 +752,12 @@ function grid( _size, _step ) {
 	 */
 
 	var vertexHere = [];
-	var normalizedSpacing = 1.0 / step;
-	for ( r = 0; r < step; r++ ) {
-		for ( c = 0; c < step; c++ ) {
+	var normalizedSpacing = 1.0 / segment;
+	for ( r = 0; r <= segment; r++ ) {
+		for ( c = 0; c <= segment; c++ ) {
 
-			vertexHere.push( [ normalizedSpacing * c, 1.0-normalizedSpacing * r, 0 ] );
-			vertexHere.push( [ normalizedSpacing * c, 1.0-normalizedSpacing * r, 1.0 ] ); // flag a vertex to displace in a shader
+			vertexHere.push( [ normalizedSpacing * c, normalizedSpacing * r, 0 ] );
+			vertexHere.push( [ normalizedSpacing * c, normalizedSpacing * r, 1.0 ] ); // flag a vertex to displace in a shader
 
 		}
 	}
@@ -771,8 +777,8 @@ function grid( _size, _step ) {
 
 	// vertex color
 	var vcolor = [];
-	for ( r = 0; r < step; r++ ) {
-		for ( c = 0; c < step; c++ ) {
+	for ( r = 0; r <= segment; r++ ) {
+		for ( c = 0; c <= segment; c++ ) {
 
 			vcolor.push( [ 1.0, 0.0, 0.0 ] );
 			vcolor.push( [ 0.0, 0.0, 1.0 ] );
@@ -826,36 +832,29 @@ function grid( _size, _step ) {
 	} );
 
 	gridMesh = new THREE.Line( gridGeom, gridShader, THREE.LinePieces );
-	gridMesh.position.y = -50;
 
 	scene.add( gridMesh );
 
 }
 
 // Source: js/main.js
- /* exported main */
+/* exported main */
 
 function main() {
 
-   // fbos = new FBOS( renderer, 512 );
-   // grid( 500, 100 );
+		fbor = new FBOCompositor( renderer, 512, SHADER_CONTAINER.passVert );
+		fbor.addPass( 'velocity', SHADER_CONTAINER.velocity );
+		fbor.addPass( 'position', SHADER_CONTAINER.position, { velocityBuffer: 'velocity' } );
 
 
-
-   fbor = new FBOR( renderer, 512, SHADER_CONTAINER.passVert );
-   fbor.addPass( 'velocity', SHADER_CONTAINER.velocity );
-   fbor.addPass( 'position', SHADER_CONTAINER.position, { velocityBuffer: 'velocity' } );
-
-
-   psys = new ParticleSystem();
-   var initialPositionDataTexture = psys.generatePositionTexture();
-   fbor.renderTexture( initialPositionDataTexture, 'position' );
+		psys = new ParticleSystem();
+		var initialPositionDataTexture = psys.generatePositionTexture();
+		fbor.renderInitialBuffer( initialPositionDataTexture, 'position' );
 
 
-   hud = new HUD( renderer );
+		hud = new HUD( renderer );
 
-
-   // initGui();
+	initGui();
 
 }
 
@@ -864,17 +863,12 @@ function main() {
 
 function update() {
 
-	// fbos.tUniforms.time.value = clock.getElapsedTime();
-	// fbos.simulate();
-	// gridShader.uniforms.heightMap.value = fbos.getOutput();
+		fbor.getPass( 'velocity' ).uniforms.time.value = clock.getElapsedTime();
 
-	fbor.getPass( 'velocity' ).uniforms.time.value = clock.getElapsedTime();
+		fbor.tick();
 
-	fbor.tick();
-
-	psys.setPositionBuffer( fbor.getFinalTarget() );
-	psys.material.uniforms.velocityBuffer.value = fbor.getPass( 'velocity' ).getOutputTarget();
-
+		psys.setPositionBuffer( fbor.getFinalTarget() );
+		psys.material.uniforms.velocityBuffer.value = fbor.getPass( 'velocity' ).getRenderTarget();
 }
 
 
@@ -884,15 +878,11 @@ function run() {
 	requestAnimationFrame( run );
 	renderer.clear();
 	update();
-	// renderer.render( scene, camera );
-	// fbos.renderHUD();
-
 	renderer.render( scene, camera );
 
-	// hud.setInputTexture( fbor.getFinalTarget() );
-	hud.setInputTexture( fbor.getPass( 'velocity' ).getOutputTarget() );
-	hud.render();
-
+		// hud.setInputTexture( fbor.getFinalTarget() );
+		hud.setInputTexture( fbor.getPass( 'velocity' ).getRenderTarget() );
+		hud.render();
 	stats.update();
 
 }
@@ -943,9 +933,7 @@ function onWindowResize() {
 	renderer.setSize( WIDTH, HEIGHT );
 	renderer.setPixelRatio( pixelRatio );
 
-	// fbos.updateHUD();
-	hud.update();
-
+		hud.update();
 }
 
 //# sourceMappingURL=app.js.map

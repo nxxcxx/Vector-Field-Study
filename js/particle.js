@@ -32,7 +32,7 @@ function ParticleSystem() {
 	this.geom.addAttribute( 'position', new THREE.BufferAttribute( this.position, 3 ) );
 	this.geom.computeBoundingSphere();
 
-	// this.material = new THREE.PointCloudMaterial( { size: 1 } );
+
 	this.material = new THREE.ShaderMaterial( {
 
 		attributes: {
@@ -43,10 +43,6 @@ function ParticleSystem() {
 		},
 
 		uniforms: {
-			dimension: {
-				type: 'f',
-				value: this.size
-			},
 			size: {
 				type: 'f',
 				value: 4.0
@@ -89,21 +85,22 @@ ParticleSystem.prototype.setPositionBuffer = function ( inputBuffer ) {
 
 ParticleSystem.prototype.generatePositionTexture = function () {
 
-	var data = new Float32Array( this.size * this.size * 3 );
+	var data = new Float32Array( this.size * this.size * 4 );
 
-	for ( var i = 0; i < data.length; i += 3 ) {
+	for ( var i = 0; i < data.length; i += 4 ) {
 
+		// position x, y, z, w
 		data[ i + 0 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
-		data[ i + 1 ] = 0;
-		data[ i + 2 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
+		data[ i + 1 ] = THREE.Math.randFloat( -this.halfSize, this.halfSize );
+		data[ i + 2 ] = 0.0;
+		data[ i + 3 ] = 0.0;
 
 	}
 
-	var texture = new THREE.DataTexture( data, this.size, this.size, THREE.RGBFormat, THREE.FloatType );
+	var texture = new THREE.DataTexture( data, this.size, this.size, THREE.RGBAFormat, THREE.FloatType );
 	texture.minFilter = THREE.NearestFilter;
 	texture.magFilter = THREE.NearestFilter;
 	texture.needsUpdate = true;
-	texture.flipY = false;
 
 	return texture;
 

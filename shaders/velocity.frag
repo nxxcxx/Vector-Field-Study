@@ -2,7 +2,7 @@
 uniform vec2 resolution;
 uniform float time;
 
-	// ashma's webGL noise
+	// ashma's webGL noise https://github.com/ashima/webgl-noise
 	vec3 mod289(vec3 x) {
 	  return x - floor(x * (1.0 / 289.0)) * 289.0;
 	}
@@ -82,6 +82,57 @@ uniform float time;
 	                                dot(p2,x2), dot(p3,x3) ) );
 	}
 
+	// https://www.shadertoy.com/view/Ms2SD1 "Seascape" by Alexander Alekseev aka TDM - 2014
+	float hash( vec2 p ) {
+		float h = dot(p,vec2(127.1,311.7));
+		return fract(sin(h)*43758.5453123);
+	}
+
+	float noise( in vec2 p ) {
+		vec2 i = floor( p );
+		vec2 f = fract( p );
+		vec2 u = f*f*(3.0-2.0*f);
+		return -1.0+2.0*mix( mix( hash( i + vec2(0.0,0.0) ),
+									hash( i + vec2(1.0,0.0) ), u.x),
+									mix( hash( i + vec2(0.0,1.0) ),
+									hash( i + vec2(1.0,1.0) ), u.x), u.y);
+	}
+
+	float sea_octave(vec2 uv, float choppy) {
+		uv += noise(uv);
+		vec2 wv = 1.0-abs(sin(uv));
+		vec2 swv = abs(cos(uv));
+		wv = mix(wv,swv,wv);
+		return pow( abs( 1.0 - pow( abs(wv.x * wv.y),
+			                     0.65 ) ),
+			         choppy);
+	}
+
+	float fsea(vec2 p) {
+
+		float sFre = 10.0;
+		float sCho = 5.0;
+		float sAmp = 1.0;
+
+		float res = 0.0;
+
+		for (int i=0; i<2; i++) {
+
+			float t = time * 0.025;
+			res += sea_octave( (p+t)*sFre, sCho );
+			res += sea_octave( (p-t)*sFre, sCho );
+			res *= sAmp;
+
+			sFre *= 1.5;
+			sAmp *= 0.3;
+			sCho *= 1.2;
+
+		}
+
+		return res;
+	}
+
+
 float rand( vec2 co ) {
 	return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
@@ -89,16 +140,16 @@ float rand( vec2 co ) {
 float fbm( vec2 p ) {
 
 	float freq = 10.0;
-	float z = time*0.2;
+	float z = time * 0.2;
 	return snoise( vec3( p * freq, z ) );
 
 }
 
 vec2 gradient( vec2 p ) {
 
-	float e = 1e-2;
+	float e = 1e-4;
 	vec2 dx = vec2( e, 0.0 );
-	vec2 dy = vec2( 0.0, -e ); // y coordinate is flipped?
+	vec2 dy = vec2( 0.0, e );
 
 	vec2 res = vec2(
 		fbm( p + dx ) - fbm( p - dx ),
@@ -109,19 +160,37 @@ vec2 gradient( vec2 p ) {
 
 }
 
+vec2 gradientFsea( vec2 p ) {
+
+	float e = 1e-4;
+	vec2 dx = vec2( e, 0.0 );
+	vec2 dy = vec2( 0.0, e );
+
+	vec2 res = vec2(
+		fsea( p + dx ) - fsea( p - dx ),
+		fsea( p + dy ) - fsea( p - dy )
+	);
+
+	return res / ( e * 2.0 );
+
+}
+
 void main()	{
 
 	vec2 uv = gl_FragCoord.xy / resolution.xy;
 
-	// gradient
-		vec2 grad = gradient( uv );
-	// curl
+	vec2 grad = gradient( uv );
+
+	#define CURL
+	#ifdef CURL
 		grad = vec2( grad.y, -grad.x );
+	#endif
 
-	vec3 field = vec3( grad.xy, 0.0 );
+	// float height = fbm( uv );
+	float height = fbm( uv );
 
-	float noiseValue = fbm( uv );
+	vec3 field = vec3( grad.xy, height );
 
-	gl_FragColor = vec4( field.xyz, noiseValue );
+	gl_FragColor = vec4( field.xyz, height );
 
 }

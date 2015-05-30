@@ -4,9 +4,9 @@ uniform sampler2D tDiffuse;
 
 void main() {
 
-	// vec3 color = texture2D( tDiffuse, vUv ).rgb;
 	vec3 color = texture2D( tDiffuse, vUv ).aaa * 0.5 + 0.5;
+	// vec3 color = texture2D( tDiffuse, vUv ).rgb;
 
-	gl_FragColor = vec4( color, 1.0 );
+	gl_FragColor = clamp( vec4( color, 1.0 ), 0.0, 1.0 );
 
 }

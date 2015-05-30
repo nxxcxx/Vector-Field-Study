@@ -8,6 +8,6 @@ void main()	{
 
 	vec4 color = texture2D( passTexture, uv ).rgba;
 
-	gl_FragColor = vec4( color );
+	gl_FragColor = color;
 
 }

@@ -15,7 +15,7 @@ var clock = new THREE.Clock();
 // ---- Settings
 var sceneSettings = {
 
-	bgColor: 0x0,
+	bgColor: 0x202020,
 	enableGridHelper: false,
 	enableAxisHelper: true
 
@@ -29,7 +29,7 @@ var sceneSettings = {
 	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 1000000 );
 	// camera orbit control
 	cameraCtrl = new THREE.OrbitControls( camera, container );
-	cameraCtrl.object.position.y = 500;
+	cameraCtrl.object.position.z = 500;
 	cameraCtrl.update();
 
 // ---- Renderer

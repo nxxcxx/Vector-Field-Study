@@ -3,7 +3,7 @@ uniform sampler2D heightMap;
 
 varying vec3 vHere;
 varying vec3 vcolor;
-varying float vcolorIntensity; // vcolorIntensity is interpolated value from vertex shader range [0.0, 1.0]
+varying float vcolorInterpolate; // vcolorInterpolate is interpolated value from vertex shader range [0.0, 1.0]
 
 float square(float s) { return s * s; }
 vec3 square(vec3 s) { return s * s; }
@@ -28,13 +28,17 @@ float easeOutQuint( float t ) {
 	return (t=t-1.0)*t*t*t*t + 1.0;
 }
 
-
 void main() {
 
 	vec3 color = vec3( 0.0 );
-	// color = vec3( texture2D( heightMap, vHere.xy ).rgb );
-	color = electricGradient(  sqrt( vcolorIntensity ) );
-	color.r = 1.0 - texture2D( heightMap, vHere.xy ).b;
+
+	#define COLOR
+	#ifdef COLOR
+		color = electricGradient(  sqrt( vcolorInterpolate ) );
+		color.r = 1.0 - texture2D( heightMap, vHere.xy ).b;
+	#else
+		color = vec3( texture2D( heightMap, vHere.xy ).w );
+	#endif
 
 	gl_FragColor = vec4( color, 1.0 );
 

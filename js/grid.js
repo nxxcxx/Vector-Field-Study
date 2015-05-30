@@ -1,20 +1,22 @@
-function grid( _size, _step ) {
+/* exported grid */
+
+function grid( _size, _segment ) {
 
 	gridGeom = new THREE.BufferGeometry();
 	var size = _size;
-	var step = _step;
+	var segment = _segment;
 	var initialHeight = 0;
-	var hs = size / 2;
-	var spc = size / ( step - 1 );
+	var hs = size * 0.5;
+	var spc = size / segment;
 
 	var i, r, c;
 	// arrange vertices like a grid
 	var vertexPositions = [];
-	for ( r = 0; r < step; r++ ) {
-		for ( c = 0; c < step; c++ ) {
+	for ( r = 0; r <= segment; r++ ) {
+		for ( c = 0; c <= segment; c++ ) {
 
-			vertexPositions.push( [ -hs + spc * c, 0            , -hs + spc * r ] );
-			vertexPositions.push( [ -hs + spc * c, initialHeight, -hs + spc * r ] );
+			vertexPositions.push( [ -hs + spc * c, -hs + spc * r, 0 ] );
+			vertexPositions.push( [ -hs + spc * c, -hs + spc * r, initialHeight ] );
 
 		}
 	}
@@ -41,12 +43,12 @@ function grid( _size, _step ) {
 	 */
 
 	var vertexHere = [];
-	var normalizedSpacing = 1.0 / step;
-	for ( r = 0; r < step; r++ ) {
-		for ( c = 0; c < step; c++ ) {
+	var normalizedSpacing = 1.0 / segment;
+	for ( r = 0; r <= segment; r++ ) {
+		for ( c = 0; c <= segment; c++ ) {
 
-			vertexHere.push( [ normalizedSpacing * c, 1.0-normalizedSpacing * r, 0 ] );
-			vertexHere.push( [ normalizedSpacing * c, 1.0-normalizedSpacing * r, 1.0 ] ); // flag a vertex to displace in a shader
+			vertexHere.push( [ normalizedSpacing * c, normalizedSpacing * r, 0 ] );
+			vertexHere.push( [ normalizedSpacing * c, normalizedSpacing * r, 1.0 ] ); // flag a vertex to displace in a shader
 
 		}
 	}
@@ -66,8 +68,8 @@ function grid( _size, _step ) {
 
 	// vertex color
 	var vcolor = [];
-	for ( r = 0; r < step; r++ ) {
-		for ( c = 0; c < step; c++ ) {
+	for ( r = 0; r <= segment; r++ ) {
+		for ( c = 0; c <= segment; c++ ) {
 
 			vcolor.push( [ 1.0, 0.0, 0.0 ] );
 			vcolor.push( [ 0.0, 0.0, 1.0 ] );
@@ -121,7 +123,6 @@ function grid( _size, _step ) {
 	} );
 
 	gridMesh = new THREE.Line( gridGeom, gridShader, THREE.LinePieces );
-	gridMesh.position.y = -50;
 
 	scene.add( gridMesh );
 

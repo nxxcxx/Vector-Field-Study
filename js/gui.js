@@ -15,7 +15,10 @@ function initGui() {
 	gui_settings = gui.addFolder( 'Settings' );
 		gui_settings.addColor( sceneSettings, 'bgColor' ).name( 'Background' );
 		gui_settings.add( camera, 'fov', 25, 120, 1 ).name( 'FOV' );
-		gui_settings.add( fbos.tUniforms.noiseScale, 'value', 0.0, 10.0, 0.1 ).name( 'Noise Scale' );
+
+		//@ifdef VECTOR_FIELD
+			gui_settings.add( fbos.tUniforms.noiseScale, 'value', 0.0, 10.0, 0.1 ).name( 'Noise Scale' );
+		//@endif
 
 	gui_display.open();
 	gui_settings.open();
