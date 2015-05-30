@@ -17,7 +17,8 @@ var sceneSettings = {
 
 	bgColor: 0x202020,
 	enableGridHelper: false,
-	enableAxisHelper: true
+	enableAxisHelper: true,
+	pause: false
 
 };
 

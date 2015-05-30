@@ -207,7 +207,7 @@ void main()	{
 	// pos is an input to noise function
 
 
-	vec3 field = curl( pos ) * 0.05;
+	vec3 field = curl( pos ) * 0.3;
 
 
 	gl_FragColor = vec4( field.xyz, 0.0 );

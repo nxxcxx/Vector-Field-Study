@@ -83,7 +83,8 @@ var sceneSettings = {
 
 	bgColor: 0x202020,
 	enableGridHelper: false,
-	enableAxisHelper: true
+	enableAxisHelper: true,
+	pause: false
 
 };
 
@@ -905,7 +906,11 @@ function run() {
 
 	requestAnimationFrame( run );
 	renderer.clear();
-	update();
+
+	if ( !sceneSettings.pause ) {
+		update();
+	}
+
 	renderer.render( scene, camera );
 
 		// hud.setInputTexture( fbor.getFinalTarget() );
@@ -922,6 +927,9 @@ window.addEventListener( 'keypress', function ( event ) {
 	var key = event.keyCode;
 
 	switch( key ) {
+
+		case 32: sceneSettings.pause = !sceneSettings.pause;
+		break;
 
 		case 65:/*A*/
 		case 97:/*a*/ sceneSettings.enableGridHelper = !sceneSettings.enableGridHelper; updateHelpers();

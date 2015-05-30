@@ -25,7 +25,11 @@ function run() {
 
 	requestAnimationFrame( run );
 	renderer.clear();
-	update();
+
+	if ( !sceneSettings.pause ) {
+		update();
+	}
+
 	renderer.render( scene, camera );
 
 	//@ifdef VECTOR_FIELD
