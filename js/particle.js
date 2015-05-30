@@ -45,7 +45,7 @@ function ParticleSystem( _size ) {
 		uniforms: {
 			size: {
 				type: 'f',
-				value: 2.0
+				value: 2.5
 			},
 			particleTexture: {
 				type: 't',

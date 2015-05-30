@@ -1,3 +1,6 @@
+/*
+ * TODO: Fix updating buffer dependencies
+ */
 function FBOCompositor( renderer, bufferSize, vertexPass ) {
 
 	var gl = renderer.getContext();

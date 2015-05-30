@@ -13,10 +13,17 @@ float rand( vec2 p ){
 
 void main() {
 
+   vColor = texture2D( velocityBuffer, here.xy ).rgb;
+
 	vec3 newPosition = texture2D( positionBuffer, here.xy ).rgb;
 
+
 	vec4 mvPosition = modelViewMatrix * vec4( newPosition, 1.0 );
-	gl_PointSize = size * ( 350.0 / length( mvPosition.xyz ) );
+
+
+	gl_PointSize = size * ( 350.0 / length( mvPosition.xyz ) );  // size attenuation
+   // gl_PointSize = size;
+
 	gl_Position = projectionMatrix * mvPosition;
 
 }

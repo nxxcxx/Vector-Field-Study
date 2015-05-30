@@ -188,6 +188,9 @@ function updateGuiDisplay() {
 }
 
 // Source: js/FBOCompositor.js
+/*
+ * TODO: Fix updating buffer dependencies
+ */
 function FBOCompositor( renderer, bufferSize, vertexPass ) {
 
 	var gl = renderer.getContext();
@@ -415,7 +418,7 @@ function HUD( renderer ) {
 
 	this.renderer = renderer;
 	this.HUDMargin = 0.05;
-	var hudHeight = 2.0 / 4.0;
+	var hudHeight = 2.0 / 4.0; // 2.0 = full screen size
 	var hudWidth = hudHeight;
 
 	this.HUDCam = new THREE.OrthographicCamera( -screenRatio, screenRatio, 1, -1, 1, 10 );
@@ -530,7 +533,7 @@ function ParticleSystem( _size ) {
 		uniforms: {
 			size: {
 				type: 'f',
-				value: 2.0
+				value: 2.5
 			},
 			particleTexture: {
 				type: 't',

@@ -3,7 +3,7 @@ function HUD( renderer ) {
 
 	this.renderer = renderer;
 	this.HUDMargin = 0.05;
-	var hudHeight = 2.0 / 4.0;
+	var hudHeight = 2.0 / 4.0; // 2.0 = full screen size
 	var hudWidth = hudHeight;
 
 	this.HUDCam = new THREE.OrthographicCamera( -screenRatio, screenRatio, 1, -1, 1, 10 );
