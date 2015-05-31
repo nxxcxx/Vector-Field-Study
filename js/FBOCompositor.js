@@ -1,20 +1,13 @@
 /*
  * TODO: Fix updating buffer dependencies
  */
-function FBOCompositor( renderer, bufferSize, vertexPass ) {
-
-	var gl = renderer.getContext();
-	if ( !gl.getExtension( "OES_texture_float" ) ) {
-		console.error( "No OES_texture_float support for float textures!" );
-	}
-
-	if ( gl.getParameter( gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS ) === 0 ) {
-		console.error( "No support for vertex shader textures!" );
-	}
+function FBOCompositor( renderer, bufferSize, passThruVertexShader ) {
 
 	this.renderer = renderer;
+
+	this._getWebGLExtensions();
 	this.bufferSize = bufferSize;
-	this.vertexPass = vertexPass;
+	this.passThruVertexShader = passThruVertexShader;
 	var halfBufferSize = bufferSize * 0.5;
 	this.camera = new THREE.OrthographicCamera( -halfBufferSize, halfBufferSize, halfBufferSize, -halfBufferSize, 1, 10 );
 	this.camera.position.z = 5;
@@ -48,51 +41,38 @@ function FBOCompositor( renderer, bufferSize, vertexPass ) {
 
 FBOCompositor.prototype = {
 
-	tick: function () {
+	_getWebGLExtensions: function() {
 
-		for ( var i = 0; i < this.passes.length; i++ ) {
+		var gl = this.renderer.getContext();
+		if ( !gl.getExtension( "OES_texture_float" ) ) {
+			console.error( "No support for float textures!" );
+		}
 
-			this.updatePassDependencies();
-			var currPass = this.passes[ i ];
-			this.renderPass( currPass.getShader(), currPass.getRenderTarget() );
-			currPass.swapBuffer();
-
+		if ( gl.getParameter( gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS ) === 0 ) {
+			console.error( "No support for vertex shader textures!" );
 		}
 
 	},
 
-	getFinalTarget: function () {
-
-		var finalPass = this.passes[ this.passes.length - 1 ];
-		return finalPass.getRenderTarget();
-
-	},
-
-	getTarget: function ( name ) {
-
-		return this.getPass( name ).getRenderTarget();
-
-	},
-
 	getPass: function ( name ) {
-
+		/* TODO: update to ECMA6 Array.find() */
 		var pass = null;
 		this.passes.some( function ( currPass ) {
 
-			if ( currPass.name === name ) {
-				pass = currPass;
-			}
-			return currPass.name === name;
+			var test = currPass.name === name;
+			if ( test ) pass = currPass;
+			return test;
 
 		} );
 
+		if ( pass === null ) console.warn( "FBOCompositor.getPass() should not return null" );
 		return pass;
 
 	},
 
 	addPass: function ( name, fragmentSahader, inputTargets ) {
 
-		var pass = new FBOPass( name, this.vertexPass, fragmentSahader, this.bufferSize );
+		var pass = new FBOPass( name, this.passThruVertexShader, fragmentSahader, this.bufferSize );
 		pass.inputTargetList = inputTargets;
 		this.passes.push( pass );
 		return pass;
@@ -102,20 +82,20 @@ FBOCompositor.prototype = {
 	updatePassDependencies: function () {
 
 		var self = this;
-		for ( var i = 0; i < this.passes.length; i++ ) {
+		this.passes.forEach( function ( currPass ) {
 
-			var currPass = this.passes[ i ];
-			Object.keys( currPass.inputTargetList || {} ).forEach( function ( shaderInputName ) {
+			Object.keys( currPass.inputTargetList ).forEach( function ( shaderInputName ) {
 
-				currPass.setInputTarget( shaderInputName, self.getTarget( currPass.inputTargetList[ shaderInputName ] ) );
+				var targetPass = currPass.inputTargetList[ shaderInputName ];
+				currPass.setInputTarget( shaderInputName, self.getPass( targetPass ).getRenderTarget() );
 
 			} );
 
-		}
+		} );
 
 	},
 
-	renderPass: function ( shader, passTarget ) {
+	_renderPass: function ( shader, passTarget ) {
 
 		this.quad.material = shader;
 		this.renderer.render( this.scene, this.camera, passTarget, true );
@@ -126,16 +106,28 @@ FBOCompositor.prototype = {
 
 		var pass = this.getPass( toPass );
 		this.passThruShader.uniforms.passTexture.value = dataTexture;
-		this.renderPass( this.passThruShader, pass.doubleBuffer[ 1 ] ); // render to secondary buffer which is already set as input to first buffer.
-		this.renderPass( this.passThruShader, pass.doubleBuffer[ 0 ] );
+		this._renderPass( this.passThruShader, pass.doubleBuffer[ 1 ] ); // render to secondary buffer which is already set as input to first buffer.
+		this._renderPass( this.passThruShader, pass.doubleBuffer[ 0 ] ); // or just render to both
 		/*!
 		 *	dont call renderer.clear() before updating the simulation it will clear current active buffer which is the render target that we previously rendered to.
 		 *	or just set active target to dummy target.
 		 */
 		this.renderer.setRenderTarget( this.dummyRenderTarget );
 
-	}
+	},
 
+	step: function () {
+
+		for ( var i = 0; i < this.passes.length; i++ ) {
+
+			this.updatePassDependencies();
+			var currPass = this.passes[ i ];
+			this._renderPass( currPass.getShader(), currPass.getRenderTarget() );
+			currPass.swapBuffer();
+
+		}
+
+	}
 
 };
 

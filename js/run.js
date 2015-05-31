@@ -9,12 +9,11 @@ function update() {
 	//@endif
 
 	//@ifdef PARTICLE_FIELD
-		fbor.getPass( 'velocity' ).uniforms.time.value = clock.getElapsedTime();
+		FBOC.getPass( 'velocityPass' ).uniforms.time.value = clock.getElapsedTime();
+		FBOC.step();
 
-		fbor.tick();
-
-		psys.setPositionBuffer( fbor.getFinalTarget() );
-		psys.material.uniforms.velocityBuffer.value = fbor.getPass( 'velocity' ).getRenderTarget();
+		psys.setPositionBuffer( FBOC.getPass( 'positionPass' ).getRenderTarget() );
+		psys.material.uniforms.velocityBuffer.value = FBOC.getPass( 'velocityPass' ).getRenderTarget();
 	//@endif
 
 }
@@ -37,8 +36,7 @@ function run() {
 	//@endif
 
 	//@ifdef PARTICLE_FIELD
-		// hud.setInputTexture( fbor.getFinalTarget() );
-		hud.setInputTexture( fbor.getPass( 'velocity' ).getRenderTarget() );
+		hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
 		hud.render();
 	//@endif
 

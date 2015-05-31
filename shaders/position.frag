@@ -22,10 +22,11 @@ void main()	{
 
 	// respawn at random location within spawnSize
 	vec3 killRange = vec3( 512.0 ) * 0.5;
-	float spawnRange = 10.0;
+	float spawnRange = 15.0;
 	if (
 		any( greaterThan( pos,  killRange ) ) ||
 		any(    lessThan( pos, -killRange ) )
+		// length( pos ) > 200.0
 	) {
 
 		float r = spawnRange;

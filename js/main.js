@@ -9,14 +9,13 @@ function main() {
 
 	//@ifdef PARTICLE_FIELD
 		var numParSq = 512;
-		fbor = new FBOCompositor( renderer, numParSq, SHADER_CONTAINER.passVert );
-		fbor.addPass( 'velocity', SHADER_CONTAINER.velocity, { positionBuffer: 'position' } );
-		fbor.addPass( 'position', SHADER_CONTAINER.position, { velocityBuffer: 'velocity' } );
-		fbor.updatePassDependencies();
+		FBOC = new FBOCompositor( renderer, numParSq, SHADER_CONTAINER.passVert );
+		FBOC.addPass( 'velocityPass', SHADER_CONTAINER.velocity, { positionBuffer: 'positionPass' } );
+		FBOC.addPass( 'positionPass', SHADER_CONTAINER.position, { velocityBuffer: 'velocityPass' } );
 
 		psys = new ParticleSystem( numParSq );
 		var initialPositionDataTexture = psys.generatePositionTexture();
-		fbor.renderInitialBuffer( initialPositionDataTexture, 'position' );
+		FBOC.renderInitialBuffer( initialPositionDataTexture, 'positionPass' );
 
 
 		hud = new HUD( renderer );
