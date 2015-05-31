@@ -46,10 +46,6 @@ function onWindowResize() {
 	renderer.setSize( WIDTH, HEIGHT );
 	renderer.setPixelRatio( pixelRatio );
 
-	//@ifdef VECTOR_FIELD
-		fbos.updateHUD();
-	//@endif
-
 	//@ifdef PARTICLE_FIELD
 		hud.update();
 	//@endif

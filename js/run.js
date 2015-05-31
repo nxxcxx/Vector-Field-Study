@@ -2,14 +2,9 @@
 
 function update() {
 
-	//@ifdef VECTOR_FIELD
-		fbos.tUniforms.time.value = clock.getElapsedTime();
-		fbos.simulate();
-		gridShader.uniforms.heightMap.value = fbos.getOutput();
-	//@endif
-
 	//@ifdef PARTICLE_FIELD
-		FBOC.getPass( 'velocityPass' ).uniforms.time.value = clock.getElapsedTime();
+		uniformsInput.time.value = clock.getElapsedTime();
+
 		FBOC.step();
 
 		psys.setPositionBuffer( FBOC.getPass( 'positionPass' ).getRenderTarget() );
@@ -31,13 +26,11 @@ function run() {
 
 	renderer.render( scene, camera );
 
-	//@ifdef VECTOR_FIELD
-		fbos.renderHUD();
-	//@endif
-
 	//@ifdef PARTICLE_FIELD
-		hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
-		hud.render();
+		if ( sceneSettings.showFrameBuffer ) {
+			hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
+			hud.render();
+		}
 	//@endif
 
 	stats.update();

@@ -40,12 +40,6 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	hudVert: 'shaders/hud.vert',
 	hudFrag: 'shaders/hud.frag',
 
-	vectorFieldSimVert: 'shaders/vectorFieldSim.vert',
-	vectorFieldSimFrag: 'shaders/vectorFieldSim.frag',
-
-	vectorFieldVert: 'shaders/vectorField.vert',
-	vectorFieldFrag: 'shaders/vectorField.frag',
-
 	particleVert: 'shaders/particle.vert',
 	particleFrag: 'shaders/particle.frag',
 
@@ -84,7 +78,8 @@ var sceneSettings = {
 	bgColor: 0x202020,
 	enableGridHelper: false,
 	enableAxisHelper: true,
-	pause: false
+	pause: false,
+	showFrameBuffer: true
 
 };
 
@@ -93,7 +88,7 @@ var sceneSettings = {
 	scene = new THREE.Scene();
 
 // ---- Camera
-	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 1000000 );
+	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 100000 );
 	// camera orbit control
 	cameraCtrl = new THREE.OrbitControls( camera, container );
 	cameraCtrl.object.position.z = 800;
@@ -163,6 +158,12 @@ function initGui() {
 		gui_settings.addColor( sceneSettings, 'bgColor' ).name( 'Background' );
 		gui_settings.add( camera, 'fov', 25, 120, 1 ).name( 'FOV' );
 
+			gui_settings.add( uniformsInput.timeMult, 'value', 0.0, 0.5, 0.01 ).name( 'Time Multiplier' );
+			gui_settings.add( uniformsInput.noiseFreq, 'value', 0.0, 20.0, 0.01 ).name( 'Frequency' );
+			gui_settings.add( uniformsInput.speed, 'value', 0.0, 200.0, 0.01 ).name( 'Speed' );
+			gui_settings.add( psys.material.uniforms.size, 'value', 0.0, 10.0, 0.01 ).name( 'Size' );
+			gui_settings.add( psys.material.uniforms.luminance, 'value', 0.0, 5.0, 0.01 ).name( 'Luminance' );
+			gui_settings.add( sceneSettings, 'showFrameBuffer' ).name( 'Show Frame Buffer' );
 	gui_display.open();
 	gui_settings.open();
 
@@ -231,7 +232,7 @@ function FBOCompositor( renderer, bufferSize, passThruVertexShader ) {
 
 FBOCompositor.prototype = {
 
-	_getWebGLExtensions: function() {
+	_getWebGLExtensions: function () {
 
 		var gl = this.renderer.getContext();
 		if ( !gl.getExtension( "OES_texture_float" ) ) {
@@ -337,20 +338,14 @@ function FBOPass( name, vertexShader, fragmentSahader, bufferSize ) {
 	this.inputTargetList = {};
 
 	this.uniforms = {
-
 		resolution: {
 			type: 'v2',
 			value: new THREE.Vector2( this.bufferSize, this.bufferSize )
-		},
-		time: {
-			type: 'f',
-			value: 0
 		},
 		mirrorBuffer: {
 			type: 't',
 			value: this.doubleBuffer[ 1 ]
 		}
-
 	};
 
 	this.shader = new THREE.ShaderMaterial( {
@@ -399,6 +394,16 @@ FBOPass.prototype = {
 		} );
 
 		return target;
+
+	},
+	attachUniform: function ( uniformsInput ) {
+
+		var self = this;
+		Object.keys( uniformsInput ).forEach( function ( key ) {
+
+			self.uniforms[ key ] = uniformsInput[ key ];
+
+		} );
 
 	}
 
@@ -525,7 +530,11 @@ function ParticleSystem( _size ) {
 		uniforms: {
 			size: {
 				type: 'f',
-				value: 2.5
+				value: 1.0
+			},
+			luminance: {
+				type: 'f',
+				value: 1.0
 			},
 			particleTexture: {
 				type: 't',
@@ -594,275 +603,26 @@ ParticleSystem.prototype.generatePositionTexture = function () {
 
 };
 
-// Source: js/fbos.js
-/* exported FBOS, fbos */
-
-var fbos;
-
-function FBOS( renderer, bufferSize ) {
-
-	var gl = renderer.getContext();
-	if ( !gl.getExtension( "OES_texture_float" ) ) {
-		console.error( "No OES_texture_float support for float textures!" );
-	}
-
-	if ( gl.getParameter( gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS ) === 0 ) {
-		console.error( "No support for vertex shader textures!" );
-	}
-
-	this.tRenderer = renderer;
-	this.tBufferSize = bufferSize;
-
-	var halfBufferSize = bufferSize * 0.5;
-	this.tCamera = new THREE.OrthographicCamera( -halfBufferSize, halfBufferSize, halfBufferSize, -halfBufferSize, 1, 10 );
-	this.tCamera.position.z = 5;
-
-	this.tScene = new THREE.Scene();
-
-	this.tTarget = new THREE.WebGLRenderTarget( bufferSize, bufferSize, {
-
-		wrapS: THREE.ClampToEdgeWrapping,
-		wrapT: THREE.ClampToEdgeWrapping,
-		minFilter: THREE.NearestFilter,
-		magFilter: THREE.NearestFilter,
-		format: THREE.RGBAFormat,
-		type: THREE.FloatType,
-		stencilBuffer: false,
-		depthBuffer: false,
-
-	} );
-
-
-	this.tUniforms = {
-
-		time: { type: 'f', value: 0 },
-		resolution: { type: 'v2', value: new THREE.Vector2( bufferSize, bufferSize ) },
-		noiseScale: { type: 'f', value: 5.0 }
-
-	};
-
-	this.tShader = new THREE.ShaderMaterial( {
-
-		uniforms: this.tUniforms,
-		vertexShader: SHADER_CONTAINER.vectorFieldSimVert,
-		fragmentShader: SHADER_CONTAINER.vectorFieldSimFrag
-
-	} );
-
-	this.tQuad = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2, 2 ), this.tShader );
-
-	this.tScene.add( this.tQuad );
-
-	this.simulate = function () {
-
-		this.tRenderer.render( this.tScene, this.tCamera, this.tTarget );
-
-	};
-
-	this.getOutput = function () {
-
-		return this.tTarget;
-
-	};
-
-	// HUD stuff
-		this.renderHUD = function () {
-
-			this.tRenderer.clearDepth();
-			this.tRenderer.render( this.HUDScene, this.HUDCam );
-
-		};
-
-		this.updateHUD = function() {	// call on window resize
-
-			// match aspect ratio to prevent distortion
-			this.HUDCam.left = -screenRatio;
-			this.HUDCam.right = screenRatio;
-
-			this.HUDMesh.position.x = this.HUDCam.left + this.HUDMargin;
-			this.HUDMesh.position.y = this.HUDCam.bottom + this.HUDMargin;
-
-			this.HUDCam.updateProjectionMatrix();
-
-		};
-
-		this.createHUD = function() {
-
-			this.HUDMargin = 0.05;
-			var hudHeight = 2.0 / 4.0;
-			var hudWidth = hudHeight;
-
-			this.HUDCam = new THREE.OrthographicCamera( -screenRatio, screenRatio, 1, -1, 1, 10 );
-			this.HUDCam.position.z = 5;
-
-			this.hudMaterial = new THREE.ShaderMaterial( {
-
-				uniforms: { tDiffuse: { type: "t", value: this.tTarget } },
-				vertexShader: SHADER_CONTAINER.hudVert,
-				fragmentShader: SHADER_CONTAINER.hudFrag,
-				depthWrite: false,
-				depthTest: false,
-				side: THREE.DoubleSide
-
-			} );
-
-
-			var hudGeo = new THREE.PlaneBufferGeometry( hudWidth, hudHeight );
-			hudGeo.applyMatrix( new THREE.Matrix4().makeTranslation( hudWidth / 2, hudHeight / 2, 0 ) );
-
-			this.HUDMesh = new THREE.Mesh( hudGeo, this.hudMaterial );
-			this.HUDMesh.position.x = this.HUDCam.left + this.HUDMargin;
-			this.HUDMesh.position.y = this.HUDCam.bottom + this.HUDMargin;
-
-			this.HUDScene = new THREE.Scene();
-			this.HUDScene.add( this.HUDMesh );
-
-		};
-
-		this.createHUD();
-
-} // end of class
-
-// Source: js/grid.js
-/* exported grid */
-
-function grid( _size, _segment ) {
-
-	gridGeom = new THREE.BufferGeometry();
-	var size = _size;
-	var segment = _segment;
-	var initialHeight = 0;
-	var hs = size * 0.5;
-	var spc = size / segment;
-
-	var i, r, c;
-	// arrange vertices like a grid
-	var vertexPositions = [];
-	for ( r = 0; r <= segment; r++ ) {
-		for ( c = 0; c <= segment; c++ ) {
-
-			vertexPositions.push( [ -hs + spc * c, -hs + spc * r, 0 ] );
-			vertexPositions.push( [ -hs + spc * c, -hs + spc * r, initialHeight ] );
-
-		}
-	}
-
-	// transfer to typed array
-	var buffVerts = new Float32Array( vertexPositions.length * 3 );
-	for ( i = 0; i < vertexPositions.length; i++ ) {
-
-		buffVerts[ i * 3 + 0 ] = vertexPositions[ i ][ 0 ];
-		buffVerts[ i * 3 + 1 ] = vertexPositions[ i ][ 1 ];
-		buffVerts[ i * 3 + 2 ] = vertexPositions[ i ][ 2 ];
-
-	}
-
-	/* store reference position when sampling a texel in a shader
-	 *  UV       (1,1)
-	 *	  ┌─────────┐
-	 *	  │       / │
-	 *	  │     /   │
-	 *	  │   /     │
-	 *	  │ /       │
-	 *	  └─────────┘
-	 * (0,0)
-	 */
-
-	var vertexHere = [];
-	var normalizedSpacing = 1.0 / segment;
-	for ( r = 0; r <= segment; r++ ) {
-		for ( c = 0; c <= segment; c++ ) {
-
-			vertexHere.push( [ normalizedSpacing * c, normalizedSpacing * r, 0 ] );
-			vertexHere.push( [ normalizedSpacing * c, normalizedSpacing * r, 1.0 ] ); // flag a vertex to displace in a shader
-
-		}
-	}
-
-	// transfer to typed array
-	var buffHere = new Float32Array( vertexHere.length * 3 );
-
-	for ( i = 0; i < vertexHere.length; i++ ) {
-
-		buffHere[ i * 3 + 0 ] = vertexHere[ i ][ 0 ];
-		buffHere[ i * 3 + 1 ] = vertexHere[ i ][ 1 ];
-		buffHere[ i * 3 + 2 ] = vertexHere[ i ][ 2 ];
-
-	}
-
-
-
-	// vertex color
-	var vcolor = [];
-	for ( r = 0; r <= segment; r++ ) {
-		for ( c = 0; c <= segment; c++ ) {
-
-			vcolor.push( [ 1.0, 0.0, 0.0 ] );
-			vcolor.push( [ 0.0, 0.0, 1.0 ] );
-		}
-	}
-
-	var buffColor = new Float32Array( vcolor.length * 3 );
-
-	for ( i = 0; i < vcolor.length; i++ ) {
-
-		buffColor[ i * 3 + 0 ] = vcolor[ i ][ 0 ];
-		buffColor[ i * 3 + 1 ] = vcolor[ i ][ 1 ];
-		buffColor[ i * 3 + 2 ] = vcolor[ i ][ 2 ];
-
-	}
-
-
-	gridGeom.addAttribute( 'position', new THREE.BufferAttribute( buffVerts, 3 ) );
-	gridGeom.addAttribute( 'here', new THREE.BufferAttribute( buffHere, 3 ) );
-	gridGeom.addAttribute( 'color', new THREE.BufferAttribute( buffColor, 3 ) );
-
-	gridGeom.attributes.position.needsUpdate = true;
-	gridGeom.attributes.here.needsUpdate = true;
-	gridGeom.attributes.color.needsUpdate = true;
-
-
-	gridShader = new THREE.ShaderMaterial( {
-
-		uniforms: {
-			heightMap: {
-				type: 't',
-				value: null
-			},
-		},
-
-		attributes: {
-			here: {
-				type: 'v3',
-				value: null
-			} // need to specify attributes .addAttribute won't add in here
-		},
-
-		vertexShader: SHADER_CONTAINER.vectorFieldVert,
-		fragmentShader: SHADER_CONTAINER.vectorFieldFrag,
-		// transparent: true,
-		// blending: THREE.AdditiveBlending,
-		// depthWrite: false
-		// depthTest: false,
-		// side: THREE.DoubleSide,
-
-	} );
-
-	gridMesh = new THREE.Line( gridGeom, gridShader, THREE.LinePieces );
-
-	scene.add( gridMesh );
-
-}
-
 // Source: js/main.js
 /* exported main */
 
 function main() {
 
+
+		uniformsInput = {
+			time     : { type: 'f', value: 0.0 },
+			timeMult : { type: 'f', value: 0.05 },
+			noiseFreq: { type: 'f', value: 2.5 },
+			speed    : { type: 'f', value: 40.0 }
+		};
+
 		var numParSq = 512;
 		FBOC = new FBOCompositor( renderer, numParSq, SHADER_CONTAINER.passVert );
 		FBOC.addPass( 'velocityPass', SHADER_CONTAINER.velocity, { positionBuffer: 'positionPass' } );
 		FBOC.addPass( 'positionPass', SHADER_CONTAINER.position, { velocityBuffer: 'velocityPass' } );
+
+		FBOC.getPass( 'velocityPass' ).attachUniform( uniformsInput );
+
 
 		psys = new ParticleSystem( numParSq );
 		var initialPositionDataTexture = psys.generatePositionTexture();
@@ -871,7 +631,7 @@ function main() {
 
 		hud = new HUD( renderer );
 
-	var boxMesh = new THREE.Mesh( new THREE.BoxGeometry( numParSq, numParSq, numParSq), null );
+	var boxMesh = new THREE.Mesh( new THREE.BoxGeometry( 512, 512, 512 ), null );
 	cube = new THREE.BoxHelper( boxMesh );
 	cube.material.color.set( 0xffffff );
 	scene.add( cube );
@@ -886,7 +646,8 @@ function main() {
 
 function update() {
 
-		FBOC.getPass( 'velocityPass' ).uniforms.time.value = clock.getElapsedTime();
+		uniformsInput.time.value = clock.getElapsedTime();
+
 		FBOC.step();
 
 		psys.setPositionBuffer( FBOC.getPass( 'positionPass' ).getRenderTarget() );
@@ -906,8 +667,10 @@ function run() {
 
 	renderer.render( scene, camera );
 
-		hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
-		hud.render();
+		if ( sceneSettings.showFrameBuffer ) {
+			hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
+			hud.render();
+		}
 	stats.update();
 
 }

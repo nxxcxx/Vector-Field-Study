@@ -3,6 +3,10 @@ uniform vec2 resolution;
 uniform float time;
 uniform sampler2D positionBuffer;
 
+uniform float timeMult;
+uniform float noiseFreq;
+uniform float speed;
+
 	// ashma's webGL 3d simplex noise https://github.com/ashima/webgl-noise
 	// vec3 mod289(vec3 x) {
 	//	return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -200,8 +204,8 @@ float rand( vec2 co ) {
 
 float fbm( vec3 p ) {
 
-	float freq = 6.0;
-	float t = time * 0.03;
+	float freq = noiseFreq;
+	float t = time * timeMult;
 	return snoise( vec4( p , t ) * freq );
 
 }
@@ -247,11 +251,9 @@ void main()	{
 
 	vec3 pos = texture2D( positionBuffer, uv ).xyz;
 
-	pos /= resolution.xxx; // need to map position range to [0, 1] dont use normalize() it normalize the length thats not what we want
-	// pos is an input to noise function
+	pos /= resolution.xxx; // pos is an input to noise function, need to map position range to [0, 1] dont use normalize() it normalize the length thats not what we want
 
-	vec3 field = curl( pos ) * 0.08;
-
+	vec3 field = curl( pos ) * 0.01 * speed;
 
 	gl_FragColor = vec4( field.xyz, 0.0 );
 

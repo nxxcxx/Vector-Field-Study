@@ -15,7 +15,7 @@ module.exports = function ( grunt ) {
 		concat: {
 			options: {},
 			main: {
-				src: [ 'js/loaders.js', 'js/scene.js', 'js/gui.js', 'js/FBOCompositor.js', 'js/hud.js', 'js/particle.js', 'js/fbos.js', 'js/grid.js', 'js/main.js', 'js/run.js', 'js/events.js' ],
+				src: [ 'js/loaders.js', 'js/scene.js', 'js/gui.js', 'js/FBOCompositor.js', 'js/hud.js', 'js/particle.js', 'js/main.js', 'js/run.js', 'js/events.js' ],
 				dest: 'js/build/app.js',
 				nonull: true,
 				options: {
@@ -74,7 +74,6 @@ module.exports = function ( grunt ) {
 		preprocess: {
 			options: {
 				context: {
-					// VECTOR_FIELD: true
 					PARTICLE_FIELD: true
 				}
 			},

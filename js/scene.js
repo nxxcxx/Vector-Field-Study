@@ -18,7 +18,8 @@ var sceneSettings = {
 	bgColor: 0x202020,
 	enableGridHelper: false,
 	enableAxisHelper: true,
-	pause: false
+	pause: false,
+	showFrameBuffer: true
 
 };
 
@@ -27,7 +28,7 @@ var sceneSettings = {
 	scene = new THREE.Scene();
 
 // ---- Camera
-	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 1000000 );
+	camera = new THREE.PerspectiveCamera( 60, screenRatio, 10, 100000 );
 	// camera orbit control
 	cameraCtrl = new THREE.OrbitControls( camera, container );
 	cameraCtrl.object.position.z = 800;

@@ -41,7 +41,7 @@ function FBOCompositor( renderer, bufferSize, passThruVertexShader ) {
 
 FBOCompositor.prototype = {
 
-	_getWebGLExtensions: function() {
+	_getWebGLExtensions: function () {
 
 		var gl = this.renderer.getContext();
 		if ( !gl.getExtension( "OES_texture_float" ) ) {
@@ -147,20 +147,14 @@ function FBOPass( name, vertexShader, fragmentSahader, bufferSize ) {
 	this.inputTargetList = {};
 
 	this.uniforms = {
-
 		resolution: {
 			type: 'v2',
 			value: new THREE.Vector2( this.bufferSize, this.bufferSize )
-		},
-		time: {
-			type: 'f',
-			value: 0
 		},
 		mirrorBuffer: {
 			type: 't',
 			value: this.doubleBuffer[ 1 ]
 		}
-
 	};
 
 	this.shader = new THREE.ShaderMaterial( {
@@ -209,6 +203,16 @@ FBOPass.prototype = {
 		} );
 
 		return target;
+
+	},
+	attachUniform: function ( uniformsInput ) {
+
+		var self = this;
+		Object.keys( uniformsInput ).forEach( function ( key ) {
+
+			self.uniforms[ key ] = uniformsInput[ key ];
+
+		} );
 
 	}
 

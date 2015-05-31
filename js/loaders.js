@@ -39,12 +39,6 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	hudVert: 'shaders/hud.vert',
 	hudFrag: 'shaders/hud.frag',
 
-	vectorFieldSimVert: 'shaders/vectorFieldSim.vert',
-	vectorFieldSimFrag: 'shaders/vectorFieldSim.frag',
-
-	vectorFieldVert: 'shaders/vectorField.vert',
-	vectorFieldFrag: 'shaders/vectorField.frag',
-
 	particleVert: 'shaders/particle.vert',
 	particleFrag: 'shaders/particle.frag',
 
