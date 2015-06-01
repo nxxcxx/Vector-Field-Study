@@ -473,10 +473,11 @@ function ParticleSystem() {
 
 	var vertexHere = [];
 	var normalizedSpacing = 1.0 / this.size;
+	var normalizedHalfPixel = 0.5 / this.size;
 	for ( r = 0; r < this.size; r++ ) {
 		for ( c = 0; c < this.size; c++ ) {
 
-			vertexHere.push( [ normalizedSpacing * c, 1.0 - normalizedSpacing * r, 0 ] );
+			vertexHere.push( [ normalizedSpacing * c + normalizedHalfPixel, 1.0 - normalizedSpacing * r + normalizedHalfPixel, 0 ] );
 
 		}
 	}
