@@ -246,13 +246,6 @@ FBOCompositor.prototype = {
 
 	},
 
-	getFinalTarget: function () {
-
-		var finalPass = this.passes[ this.passes.length - 1 ];
-		return finalPass.getRenderTarget();
-
-	},
-
 	getTarget: function ( name ) {
 
 		return this.getPass( name ).getRenderTarget();
@@ -260,7 +253,7 @@ FBOCompositor.prototype = {
 	},
 
 	getPass: function ( name ) {
-
+		/* TODO: ECMA6 Array.find */
 		var pass = null;
 		this.passes.some( function ( currPass ) {
 
@@ -302,7 +295,7 @@ FBOCompositor.prototype = {
 
 		var pass = this.getPass( toPass );
 		this.passThruShader.uniforms.passTexture.value = dataTexture;
-		this.renderPass( this.passThruShader, pass.doubleBuffer[ 1 ], true ); // render to secondary buffer which is already set as input to first buffer.
+		this.renderPass( this.passThruShader, pass.doubleBuffer[ 1 ] ); // render to secondary buffer which is already set as input to first buffer.
 		/*!
 		 *	dont call renderer.clear() before updating the simulation it will clear current active buffer which is the render target that we previously rendered to.
 		 *	or just set active target to dummy target.
@@ -867,7 +860,7 @@ function update() {
 
 		fbor.tick();
 
-		psys.setPositionBuffer( fbor.getFinalTarget() );
+		psys.setPositionBuffer( fbor.getPass( 'position' ).getRenderTarget() );
 		psys.material.uniforms.velocityBuffer.value = fbor.getPass( 'velocity' ).getRenderTarget();
 }
 
@@ -880,7 +873,6 @@ function run() {
 	update();
 	renderer.render( scene, camera );
 
-		// hud.setInputTexture( fbor.getFinalTarget() );
 		hud.setInputTexture( fbor.getPass( 'velocity' ).getRenderTarget() );
 		hud.render();
 	stats.update();

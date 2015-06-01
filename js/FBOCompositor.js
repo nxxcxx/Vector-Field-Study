@@ -57,13 +57,6 @@ FBOCompositor.prototype = {
 
 	},
 
-	getFinalTarget: function () {
-
-		var finalPass = this.passes[ this.passes.length - 1 ];
-		return finalPass.getRenderTarget();
-
-	},
-
 	getTarget: function ( name ) {
 
 		return this.getPass( name ).getRenderTarget();
@@ -71,7 +64,7 @@ FBOCompositor.prototype = {
 	},
 
 	getPass: function ( name ) {
-
+		/* TODO: ECMA6 Array.find */
 		var pass = null;
 		this.passes.some( function ( currPass ) {
 

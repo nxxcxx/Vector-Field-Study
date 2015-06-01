@@ -13,7 +13,7 @@ function update() {
 
 		fbor.tick();
 
-		psys.setPositionBuffer( fbor.getFinalTarget() );
+		psys.setPositionBuffer( fbor.getPass( 'position' ).getRenderTarget() );
 		psys.material.uniforms.velocityBuffer.value = fbor.getPass( 'velocity' ).getRenderTarget();
 	//@endif
 
@@ -33,7 +33,6 @@ function run() {
 	//@endif
 
 	//@ifdef PARTICLE_FIELD
-		// hud.setInputTexture( fbor.getFinalTarget() );
 		hud.setInputTexture( fbor.getPass( 'velocity' ).getRenderTarget() );
 		hud.render();
 	//@endif
