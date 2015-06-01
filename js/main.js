@@ -4,7 +4,7 @@ function main() {
 
 	uniformsInput = {
 		time     : { type: 'f', value: 0.0 },
-		timeMult : { type: 'f', value: 0.05 },
+		timeMult : { type: 'f', value: 0.192 },
 		noiseFreq: { type: 'f', value: 2.5 },
 		speed    : { type: 'f', value: 15.0 }
 	};

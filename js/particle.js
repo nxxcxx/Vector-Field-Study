@@ -9,10 +9,11 @@ function ParticleSystem( _size ) {
 
 	var vertexHere = [];
 	var normalizedSpacing = 1.0 / this.size;
-	for ( r = 0; r < this.size; r++ ) {
-		for ( c = 0; c < this.size; c++ ) {
+	var normalizedHalfPixel = 0.5 / this.size;
+	for ( r = 0; r < this.size; r ++ ) {
+		for ( c = 0; c < this.size; c ++ ) {
 
-			vertexHere.push( [ normalizedSpacing * c, 1.0 - normalizedSpacing * r, 0 ] );
+			vertexHere.push( [ normalizedSpacing * c + normalizedHalfPixel, 1.0 - normalizedSpacing * r + normalizedHalfPixel, 0 ] );
 
 		}
 	}
@@ -45,11 +46,11 @@ function ParticleSystem( _size ) {
 		uniforms: {
 			size: {
 				type: 'f',
-				value: 1.0
+				value: 2.1
 			},
 			luminance: {
 				type: 'f',
-				value: 1.0
+				value: 1.1
 			},
 			particleTexture: {
 				type: 't',

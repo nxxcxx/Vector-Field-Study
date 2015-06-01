@@ -265,7 +265,7 @@ FBOCompositor.prototype = {
 	addPass: function ( name, fragmentSahader, inputTargets ) {
 
 		var pass = new FBOPass( name, this.passThruVertexShader, fragmentSahader, this.bufferSize );
-		pass.inputTargetList = inputTargets;
+		pass.inputTargetList = inputTargets  || {};
 		this.passes.push( pass );
 		return pass;
 
@@ -434,7 +434,6 @@ function HUD( renderer ) {
 		fragmentShader: SHADER_CONTAINER.hudFrag,
 		depthWrite: false,
 		depthTest: false,
-		side: THREE.DoubleSide
 
 	} );
 
@@ -495,10 +494,11 @@ function ParticleSystem( _size ) {
 
 	var vertexHere = [];
 	var normalizedSpacing = 1.0 / this.size;
-	for ( r = 0; r < this.size; r++ ) {
-		for ( c = 0; c < this.size; c++ ) {
+	var normalizedHalfPixel = 0.5 / this.size;
+	for ( r = 0; r < this.size; r ++ ) {
+		for ( c = 0; c < this.size; c ++ ) {
 
-			vertexHere.push( [ normalizedSpacing * c, 1.0 - normalizedSpacing * r, 0 ] );
+			vertexHere.push( [ normalizedSpacing * c + normalizedHalfPixel, 1.0 - normalizedSpacing * r + normalizedHalfPixel, 0 ] );
 
 		}
 	}
@@ -531,11 +531,11 @@ function ParticleSystem( _size ) {
 		uniforms: {
 			size: {
 				type: 'f',
-				value: 1.0
+				value: 2.1
 			},
 			luminance: {
 				type: 'f',
-				value: 1.0
+				value: 1.1
 			},
 			particleTexture: {
 				type: 't',
@@ -611,7 +611,7 @@ function main() {
 
 	uniformsInput = {
 		time     : { type: 'f', value: 0.0 },
-		timeMult : { type: 'f', value: 0.05 },
+		timeMult : { type: 'f', value: 0.192 },
 		noiseFreq: { type: 'f', value: 2.5 },
 		speed    : { type: 'f', value: 15.0 }
 	};

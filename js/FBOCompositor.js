@@ -73,7 +73,7 @@ FBOCompositor.prototype = {
 	addPass: function ( name, fragmentSahader, inputTargets ) {
 
 		var pass = new FBOPass( name, this.passThruVertexShader, fragmentSahader, this.bufferSize );
-		pass.inputTargetList = inputTargets;
+		pass.inputTargetList = inputTargets  || {};
 		this.passes.push( pass );
 		return pass;
 

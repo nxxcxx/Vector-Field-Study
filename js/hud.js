@@ -21,7 +21,6 @@ function HUD( renderer ) {
 		fragmentShader: SHADER_CONTAINER.hudFrag,
 		depthWrite: false,
 		depthTest: false,
-		side: THREE.DoubleSide
 
 	} );
 
