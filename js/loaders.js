@@ -45,7 +45,6 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	velocity: 'shaders/velocity.frag',
 	position: 'shaders/position.frag'
 
-
 } );
 
 var TEXTURES = {};

@@ -2,14 +2,12 @@
 
 function update() {
 
-	//@ifdef PARTICLE_FIELD
-		uniformsInput.time.value = clock.getElapsedTime();
+	uniformsInput.time.value = clock.getElapsedTime();
 
-		FBOC.step();
+	FBOC.step();
 
-		psys.setPositionBuffer( FBOC.getPass( 'positionPass' ).getRenderTarget() );
-		psys.material.uniforms.velocityBuffer.value = FBOC.getPass( 'velocityPass' ).getRenderTarget();
-	//@endif
+	psys.setPositionBuffer( FBOC.getPass( 'positionPass' ).getRenderTarget() );
+	psys.material.uniforms.velocityBuffer.value = FBOC.getPass( 'velocityPass' ).getRenderTarget();
 
 }
 
@@ -26,12 +24,10 @@ function run() {
 
 	renderer.render( scene, camera );
 
-	//@ifdef PARTICLE_FIELD
-		if ( sceneSettings.showFrameBuffer ) {
-			hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
-			hud.render();
-		}
-	//@endif
+	if ( sceneSettings.showFrameBuffer ) {
+		hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
+		hud.render();
+	}
 
 	stats.update();
 

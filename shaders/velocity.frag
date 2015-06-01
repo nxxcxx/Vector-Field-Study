@@ -213,9 +213,9 @@ float fbm( vec3 p ) {
 vec3 potential( vec3 p ) {
 
 	vec3 res = vec3(
-		fbm( p + 35.0 ),
-		fbm( p + 15.0 ),
-		fbm( p + 64.0 )
+		fbm( p + vec3(  97.0,  22.0, -24.0 ) ),
+		fbm( p + vec3(  15.0, -54.0, 167.0 ) ),
+		fbm( p + vec3( -79.0,  86.0, -68.0 ) )
 	);
 	return res;
 }

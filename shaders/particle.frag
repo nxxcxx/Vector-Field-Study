@@ -2,7 +2,10 @@
 uniform sampler2D particleTexture;
 uniform float luminance;
 
-varying vec3 vColor;
+varying vec3 vVel;
+varying float vLife;
+varying float vDepth;
+
 
 float square(float s) { return s * s; }
 vec3 square(vec3 s) { return s * s; }
@@ -26,24 +29,26 @@ float easeOutCirc( float t ) {
 	return sqrt( 1.0 - (t-1.0)*(t-1.0) );
 }
 
+// vec3 luminanceCoef = vec3( 0.299, 0.587, 0.114 );
+// float textureLuminance = clamp( dot( pColor.rgb, luminanceCoef ), 0.0, 1.0 );
+// pColor.rgb = heatmapGradient( easeOutQuint( nVel ) ) * luminance;
 
 void main() {
 
 
 	vec4 pColor = texture2D( particleTexture, gl_PointCoord ).rgba;
 
-	// vec3 luminanceCoef = vec3( 0.299, 0.587, 0.114 );
-	// float textureLuminance = clamp( dot( pColor.rgb, luminanceCoef ), 0.0, 1.0 );
-
-	float nVel = length( vColor ) * 0.09;
+	float nVel = length( vVel ) * 0.09;
 
 	vec3 colA = vec3( 0.0, 0.0, 0.0 );
 	vec3 colB = vec3( 0.02, 0.04, 0.1 );
 
 	pColor.rgb = mix( colB, colA, nVel );
-	pColor.rgb = sqrt( pColor.rgb ) * luminance;
+	pColor.rgb = pow( abs( pColor.rgb ), vec3( 0.8 ) ) * luminance * vLife/200.0;
 
-	// pColor.rgb = heatmapGradient( easeOutQuint( nVel ) ) * luminance;
+
+	// vec4 depth = vec4( vec3( 1.0 - vDepth * 0.0005 ) 1.0 ); // particle depth map
+
 
 	gl_FragColor = pColor.rgba;
 

@@ -74,7 +74,7 @@ module.exports = function ( grunt ) {
 		preprocess: {
 			options: {
 				context: {
-					PARTICLE_FIELD: true
+					DEBUG: true
 				}
 			},
 			js: {

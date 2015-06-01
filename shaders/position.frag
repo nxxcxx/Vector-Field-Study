@@ -15,22 +15,18 @@ void main()	{
 
 	vec3 pos = texture2D( mirrorBuffer, uv ).xyz;
 
+	float life = texture2D( mirrorBuffer, uv ).w;
+	life -= 0.2;
+
 	vec3 vel = texture2D( velocityBuffer, uv ).xyz;
 
 	pos.xyz += vel.xyz;
 
 
-	// respawn at random location within spawnSize
-	vec3 killRange = vec3( 512.0 ) * 0.5;
-	float spawnRange = 50.0;
-	if (
-		any( greaterThan( pos,  killRange ) ) ||
-		any(    lessThan( pos, -killRange ) )
-		// length( pos ) > 200.0
-	) {
+	if ( life <= 0.0 ) {
 
-		// sphere spawn
-		float r =  rand( uv + 000.0 ) * spawnRange;
+		float spawnRange = 10.0;
+		float r  = rand( uv ) * spawnRange + 5.0;
 		float th = rand( uv + 111.0 ) * PI;
 		float ph = rand( uv + 222.0 ) * 2.0 * PI;
 
@@ -38,13 +34,35 @@ void main()	{
 		pos.y = r * sin( th ) * sin( ph );
 		pos.z = r * cos( th );
 
-		// box spawn
-		// pos.x = rand( uv + 111.0 ) * spawnRange - ( spawnRange * 0.5 );
-		// pos.y = rand( uv + 222.0 ) * spawnRange - ( spawnRange * 0.5 );
-		// pos.z = rand( uv + 333.0 ) * spawnRange - ( spawnRange * 0.5 );
+		life = rand( uv ) * 250.0 + 350.0;
 
 	}
 
-	gl_FragColor = vec4( pos, 1.0 );
+	// respawn at random location within spawnSize
+	// vec3 killRange = vec3( 1500.0 ) * 0.5;
+	// float spawnRange = 50.0;
+	// if (
+	// 	any( greaterThan( pos,  killRange ) ) ||
+	// 	any(    lessThan( pos, -killRange ) )
+	// 	// length( pos ) > 200.0
+	// ) {
+	//
+	// 	// sphere spawn
+	// 	float r =  rand( uv + 000.0 ) * spawnRange;
+	// 	float th = rand( uv + 111.0 ) * PI;
+	// 	float ph = rand( uv + 222.0 ) * 2.0 * PI;
+	//
+	// 	pos.x = r * sin( th ) * cos( ph );
+	// 	pos.y = r * sin( th ) * sin( ph );
+	// 	pos.z = r * cos( th );
+	//
+	// 	// box spawn
+	// 	// pos.x = rand( uv + 111.0 ) * spawnRange - ( spawnRange * 0.5 );
+	// 	// pos.y = rand( uv + 222.0 ) * spawnRange - ( spawnRange * 0.5 );
+	// 	// pos.z = rand( uv + 333.0 ) * spawnRange - ( spawnRange * 0.5 );
+	//
+	// }
+
+	gl_FragColor = vec4( pos, life );
 
 }

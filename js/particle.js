@@ -105,7 +105,7 @@ ParticleSystem.prototype.generatePositionTexture = function () {
 		data[ i + 0 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
 		data[ i + 1 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
 		data[ i + 2 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
-		data[ i + 3 ] = 0.0;
+		data[ i + 3 ] = THREE.Math.randFloat( 250, 600.0 );	// particle life?
 
 	}
 

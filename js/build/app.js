@@ -46,7 +46,6 @@ shaderLoader.loadMultiple( SHADER_CONTAINER, {
 	velocity: 'shaders/velocity.frag',
 	position: 'shaders/position.frag'
 
-
 } );
 
 var TEXTURES = {};
@@ -152,18 +151,20 @@ function initGui() {
 	gui.width = 300;
 
 	gui_display = gui.addFolder( 'Display' );
-	gui_display.autoListen = false;
+		gui_display.autoListen = false;
 
 	gui_settings = gui.addFolder( 'Settings' );
 		gui_settings.addColor( sceneSettings, 'bgColor' ).name( 'Background' );
 		gui_settings.add( camera, 'fov', 25, 120, 1 ).name( 'FOV' );
 
-			gui_settings.add( uniformsInput.timeMult, 'value', 0.0, 0.5, 0.01 ).name( 'Time Multiplier' );
-			gui_settings.add( uniformsInput.noiseFreq, 'value', 0.0, 20.0, 0.01 ).name( 'Frequency' );
-			gui_settings.add( uniformsInput.speed, 'value', 0.0, 200.0, 0.01 ).name( 'Speed' );
-			gui_settings.add( psys.material.uniforms.size, 'value', 0.0, 10.0, 0.01 ).name( 'Size' );
-			gui_settings.add( psys.material.uniforms.luminance, 'value', 0.0, 5.0, 0.01 ).name( 'Luminance' );
-			gui_settings.add( sceneSettings, 'showFrameBuffer' ).name( 'Show Frame Buffer' );
+		gui_settings.add( uniformsInput.timeMult, 'value', 0.0, 0.5, 0.01 ).name( 'Time Multiplier' );
+		gui_settings.add( uniformsInput.noiseFreq, 'value', 0.0, 20.0, 0.01 ).name( 'Frequency' );
+		gui_settings.add( uniformsInput.speed, 'value', 0.0, 200.0, 0.01 ).name( 'Speed' );
+		gui_settings.add( psys.material.uniforms.size, 'value', 0.0, 10.0, 0.01 ).name( 'Size' );
+		gui_settings.add( psys.material.uniforms.luminance, 'value', 0.0, 5.0, 0.01 ).name( 'Luminance' );
+		gui_settings.add( sceneSettings, 'showFrameBuffer' ).name( 'Show Frame Buffer' );
+
+
 	gui_display.open();
 	gui_settings.open();
 
@@ -590,7 +591,7 @@ ParticleSystem.prototype.generatePositionTexture = function () {
 		data[ i + 0 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
 		data[ i + 1 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
 		data[ i + 2 ] = THREE.Math.randFloat( -fieldSize, fieldSize );
-		data[ i + 3 ] = 0.0;
+		data[ i + 3 ] = THREE.Math.randFloat( 250, 600.0 );	// particle life?
 
 	}
 
@@ -608,30 +609,28 @@ ParticleSystem.prototype.generatePositionTexture = function () {
 
 function main() {
 
+	uniformsInput = {
+		time     : { type: 'f', value: 0.0 },
+		timeMult : { type: 'f', value: 0.05 },
+		noiseFreq: { type: 'f', value: 2.5 },
+		speed    : { type: 'f', value: 15.0 }
+	};
 
-		uniformsInput = {
-			time     : { type: 'f', value: 0.0 },
-			timeMult : { type: 'f', value: 0.05 },
-			noiseFreq: { type: 'f', value: 2.5 },
-			speed    : { type: 'f', value: 40.0 }
-		};
+	var numParSq = 512;
+	FBOC = new FBOCompositor( renderer, numParSq, SHADER_CONTAINER.passVert );
+	FBOC.addPass( 'velocityPass', SHADER_CONTAINER.velocity, { positionBuffer: 'positionPass' } );
+	FBOC.addPass( 'positionPass', SHADER_CONTAINER.position, { velocityBuffer: 'velocityPass' } );
 
-		var numParSq = 512;
-		FBOC = new FBOCompositor( renderer, numParSq, SHADER_CONTAINER.passVert );
-		FBOC.addPass( 'velocityPass', SHADER_CONTAINER.velocity, { positionBuffer: 'positionPass' } );
-		FBOC.addPass( 'positionPass', SHADER_CONTAINER.position, { velocityBuffer: 'velocityPass' } );
-
-		FBOC.getPass( 'velocityPass' ).attachUniform( uniformsInput );
-
-
-		psys = new ParticleSystem( numParSq );
-		var initialPositionDataTexture = psys.generatePositionTexture();
-		FBOC.renderInitialBuffer( initialPositionDataTexture, 'positionPass' );
+	FBOC.getPass( 'velocityPass' ).attachUniform( uniformsInput );
 
 
-		hud = new HUD( renderer );
+	psys = new ParticleSystem( numParSq );
+	var initialPositionDataTexture = psys.generatePositionTexture();
+	FBOC.renderInitialBuffer( initialPositionDataTexture, 'positionPass' );
 
-	var boxMesh = new THREE.Mesh( new THREE.BoxGeometry( 512, 512, 512 ), null );
+	hud = new HUD( renderer );
+
+	var boxMesh = new THREE.Mesh( new THREE.BoxGeometry( 1500, 1500, 1500 ), null );
 	cube = new THREE.BoxHelper( boxMesh );
 	cube.material.color.set( 0xffffff );
 	scene.add( cube );
@@ -646,12 +645,13 @@ function main() {
 
 function update() {
 
-		uniformsInput.time.value = clock.getElapsedTime();
+	uniformsInput.time.value = clock.getElapsedTime();
 
-		FBOC.step();
+	FBOC.step();
 
-		psys.setPositionBuffer( FBOC.getPass( 'positionPass' ).getRenderTarget() );
-		psys.material.uniforms.velocityBuffer.value = FBOC.getPass( 'velocityPass' ).getRenderTarget();
+	psys.setPositionBuffer( FBOC.getPass( 'positionPass' ).getRenderTarget() );
+	psys.material.uniforms.velocityBuffer.value = FBOC.getPass( 'velocityPass' ).getRenderTarget();
+
 }
 
 
@@ -667,10 +667,11 @@ function run() {
 
 	renderer.render( scene, camera );
 
-		if ( sceneSettings.showFrameBuffer ) {
-			hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
-			hud.render();
-		}
+	if ( sceneSettings.showFrameBuffer ) {
+		hud.setInputTexture( FBOC.getPass( 'velocityPass' ).getRenderTarget() );
+		hud.render();
+	}
+
 	stats.update();
 
 }
@@ -724,7 +725,8 @@ function onWindowResize() {
 	renderer.setSize( WIDTH, HEIGHT );
 	renderer.setPixelRatio( pixelRatio );
 
-		hud.update();
+	hud.update();
+
 }
 
 //# sourceMappingURL=app.js.map

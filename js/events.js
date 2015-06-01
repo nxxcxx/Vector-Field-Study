@@ -46,8 +46,6 @@ function onWindowResize() {
 	renderer.setSize( WIDTH, HEIGHT );
 	renderer.setPixelRatio( pixelRatio );
 
-	//@ifdef PARTICLE_FIELD
-		hud.update();
-	//@endif
+	hud.update();
 
 }

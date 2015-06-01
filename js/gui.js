@@ -10,20 +10,19 @@ function initGui() {
 	gui.width = 300;
 
 	gui_display = gui.addFolder( 'Display' );
-	gui_display.autoListen = false;
+		gui_display.autoListen = false;
 
 	gui_settings = gui.addFolder( 'Settings' );
 		gui_settings.addColor( sceneSettings, 'bgColor' ).name( 'Background' );
 		gui_settings.add( camera, 'fov', 25, 120, 1 ).name( 'FOV' );
 
-		//@ifdef PARTICLE_FIELD
-			gui_settings.add( uniformsInput.timeMult, 'value', 0.0, 0.5, 0.01 ).name( 'Time Multiplier' );
-			gui_settings.add( uniformsInput.noiseFreq, 'value', 0.0, 20.0, 0.01 ).name( 'Frequency' );
-			gui_settings.add( uniformsInput.speed, 'value', 0.0, 200.0, 0.01 ).name( 'Speed' );
-			gui_settings.add( psys.material.uniforms.size, 'value', 0.0, 10.0, 0.01 ).name( 'Size' );
-			gui_settings.add( psys.material.uniforms.luminance, 'value', 0.0, 5.0, 0.01 ).name( 'Luminance' );
-			gui_settings.add( sceneSettings, 'showFrameBuffer' ).name( 'Show Frame Buffer' );
-		//@endif
+		gui_settings.add( uniformsInput.timeMult, 'value', 0.0, 0.5, 0.01 ).name( 'Time Multiplier' );
+		gui_settings.add( uniformsInput.noiseFreq, 'value', 0.0, 20.0, 0.01 ).name( 'Frequency' );
+		gui_settings.add( uniformsInput.speed, 'value', 0.0, 200.0, 0.01 ).name( 'Speed' );
+		gui_settings.add( psys.material.uniforms.size, 'value', 0.0, 10.0, 0.01 ).name( 'Size' );
+		gui_settings.add( psys.material.uniforms.luminance, 'value', 0.0, 5.0, 0.01 ).name( 'Luminance' );
+		gui_settings.add( sceneSettings, 'showFrameBuffer' ).name( 'Show Frame Buffer' );
+
 
 	gui_display.open();
 	gui_settings.open();
